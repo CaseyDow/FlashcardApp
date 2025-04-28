@@ -161,8 +161,6 @@ app.put('/api/decks/:id', authenticate, async (req, res) => {
       return res.status(400).json({ message: 'Deck not found' });
     }
 
-    console.log(cards)
-
     deck.name = name;
     deck.cards = cards;
 

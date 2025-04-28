@@ -22,6 +22,9 @@ function App() {
   const [mode, setMode] = useState('home');
   const [selectedDeck, setSelectedDeck] = useState(null);
 
+  const [studyIndex, setStudyIndex] = useState(0);
+  const [studyFront, setStudyFront] = useState(true);
+
   const URL = "http://localhost:5050/api";
 
   async function handleAuthSubmit(e) {
@@ -203,6 +206,30 @@ function App() {
     checkLoginStatus();
   }, []);
 
+  useEffect(() => {
+    if (mode != 'study') {
+      return
+    }
+    const keyDown = (e) => {
+      if (e.code == 'Space') {
+        e.preventDefault();
+        setStudyFront(!studyFront);
+      } else if (e.code == 'ArrowRight') {
+        e.preventDefault();
+        setStudyIndex(Math.min(studyIndex + 1, selectedDeck.cards.length - 1));
+        setStudyFront(true);
+      } else if (e.code == 'ArrowLeft') {
+        e.preventDefault();
+        setStudyIndex(Math.max(studyIndex - 1, 0));
+        setStudyFront(true);
+      }
+    };
+    window.addEventListener('keydown', keyDown);
+    
+    return () => window.removeEventListener('keydown', keyDown);
+
+  }, [mode]);
+
 
   if (!loggedIn) {
     return (
@@ -221,7 +248,7 @@ function App() {
     );
   }
 
-  if (mode === 'edit' && selectedDeck) {
+  if (mode == 'edit' && selectedDeck) {
     return (
       <div style={{ padding: 50 }}>
         <h2>Editing Deck</h2>
@@ -254,12 +281,50 @@ function App() {
       </div>
     );
   }
+
   if (mode == 'study' && selectedDeck) {
     return (
       <div style={{ padding: 50 }}>
-        <h2>Studying Deck: {selectedDeck.name}</h2>
-        <p>(Study mode coming soon)</p>
-        <button onClick={() => setMode('home')}>Back</button>
+        <h2>{selectedDeck.name}</h2>
+
+        <div
+          style={{
+            padding: '50px',
+            width: '300px',
+            height: '200px',
+            border: 'solid 1px black',
+          }} onClick={() => setStudyFront(!studyFront)}>
+          {
+            selectedDeck.cards.length == 0
+              ? "Empty Deck"
+              : (studyFront ? selectedDeck.cards[studyIndex].front : selectedDeck.cards[studyIndex].back)
+          }
+          
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', marginTop: '20px' }}>
+          <button
+            onClick={() => {
+              setStudyIndex(Math.max(studyIndex - 1, 0));
+              setStudyFront(true);
+            }} disabled={studyIndex == 0}>
+            ←
+          </button>
+
+          <span>{studyIndex + 1} / {selectedDeck.cards.length}</span>
+
+          <button
+            onClick={() => {
+              setStudyIndex(Math.min(studyIndex + 1, selectedDeck.cards.length - 1));
+              setStudyFront(true);
+            }} disabled={studyIndex >= selectedDeck.cards.length - 1}>
+            →
+          </button>
+        </div>
+
+        <div>
+          <button onClick={() => setMode('home')}>Home</button>
+        </div>
       </div>
     );
   }
