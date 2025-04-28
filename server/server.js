@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 
+import Deck from './models/Deck.js';
 import User from './models/User.js';
 
 dotenv.config();
@@ -38,6 +39,10 @@ function parseCookies(cookieHeader) {
 function authToken(id) {
   return jwt.sign({ id: id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 }
+
+app.get('/api/user/check', authenticate, (req, res) => {
+  res.json({ loggedIn: true });
+});
 
 app.post('/api/user/signup', async (req, res) => {
   const { username, password } = req.body;
@@ -134,27 +139,33 @@ app.post('/api/user/logout', (req, res) => {
   res.json({ message: 'Logged out.' });
 });
 
-app.post('/api/private/upload', authenticate, async (req, res) => {
-  const { data } = req.body;
+app.post('/api/decks', authenticate, async (req, res) => {
+  const { name, cards } = req.body;
 
-  const user = await User.findById(req.userId);
-  if (!user) {
-    return res.status(404).json({ message: 'User not found' });
+  if (name == null || name == '' || !Array.isArray(cards)) {
+    return res.status(400).json({ message: 'Invalid deck' });
   }
 
-  user.data = data;
-  await user.save();
-
-  res.json({ message: 'Data saved!' });
+  try {
+    const deck = await Deck.create({ name: name, cards: cards });
+    await User.findByIdAndUpdate(req.userId, {
+      $push: { decks: deck._id }
+    });
+    res.json({ message: 'Deck created', deck });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
 });
 
-app.get('/api/private/fetch', authenticate, async (req, res) => {
-  const user = await User.findById(req.userId);
-  if (!user) {
-    return res.status(404).json({ message: 'User not found' });
+app.get('/api/decks', authenticate, async (req, res) => {
+  try {
+    const user = await User.findById(req.userId).populate('decks');
+    res.json({ decks: user.decks });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Internal Server Error' });
   }
-
-  res.json({ data: user.data });
 });
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

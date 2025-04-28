@@ -1,11 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 function App() {
   const [loginMode, setLoginMode] = useState(true);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [message, setMessage] = useState('');
-  const [fetchedData, setFetchedData] = useState('');
+  const [loggedIn, setLoggedIn] = useState(false);
+
+  const [front, setFront] = useState('');
+  const [back, setBack] = useState('');
+  const [flashcards, setFlashcards] = useState([]);
+
+  const [deckName, setDeckName] = useState('');
+  const [selectedCardIds, setSelectedCardIds] = useState([]);
+  const [decks, setDecks] = useState([]);
 
   const URL = "http://localhost:5050/api";
 
@@ -22,38 +29,7 @@ function App() {
 
       const result = await res.json();
       alert(result.message);
-    } catch (error) {
-      console.error('Error:', error);
-      alert('Error');
-    }
-  };
-
-  async function uploadData() {
-    try {
-      const res = await fetch(`${URL}/private/upload`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ data: message }),
-      });
-
-      const result = await res.json();
-      alert(result.message);
-    } catch (error) {
-      console.error('Error:', error);
-      alert('Error');
-    }
-  };
-
-  async function fetchData() {
-    try {
-      const res = await fetch(`${URL}/private/fetch`, {
-        method: 'GET',
-        credentials: 'include',
-      });
-
-      const result = await res.json();
-      setFetchedData(result.data || '');
+      checkLoginStatus();
     } catch (error) {
       console.error('Error:', error);
       alert('Error');
@@ -86,6 +62,7 @@ function App() {
         credentials: 'include',
       });
 
+      setLoggedIn(false);
       const result = await res.json();
       alert(result.message);
     } catch (error) {
@@ -94,47 +71,135 @@ function App() {
     }
   }
 
+  async function createDeck() {
+    if (!deckName || flashcards.length === 0) {
+      alert('Please provide a deck name and at least one flashcard');
+      return;
+    }
+
+    try {
+      const res = await fetch(`${URL}/decks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ name: deckName, cards: flashcards }),
+      });
+
+      const result = await res.json();
+      alert(result.message);
+      setDeckName('');
+      setFlashcards([]);
+      fetchDecks();
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error creating deck');
+    }
+  }
+
+  async function fetchDecks() {
+    try {
+      const res = await fetch(`${URL}/decks`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+
+      const result = await res.json();
+      setDecks(result.decks || []);
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error fetching decks');
+    }
+  }
+
+  async function checkLoginStatus() {
+    try {
+      const res = await fetch(`${URL}/user/check`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+
+      if (res.ok) {
+        setLoggedIn(true);
+        fetchDecks();
+      } else {
+        setLoggedIn(false);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      setLoggedIn(false);
+    }
+  }
+
+  useEffect(() => {
+    checkLoginStatus();
+  }, []);
+
+  function addFlashcard() {
+    if (!front || !back) {
+      alert('Please fill both front and back');
+      return;
+    }
+    setFlashcards([...flashcards, { front, back }]);
+    setFront('');
+    setBack('');
+  }
+
+
   return (
     <div style={{ padding: 50 }}>
-      <h1>{loginMode ? 'Login' : 'Sign Up'}</h1>
+      {loggedIn ? (
+        <>
+          <button onClick={deleteAccount}>Delete Account</button>
+          <button onClick={logout}>Logout</button>
 
-      <form onSubmit={handleAuthSubmit}>
-        <input placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)}/>
-        <input placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} type="password"/>
-        <br />
-        <button type="submit">
-          {loginMode ? 'Login' : 'Sign Up'}
-        </button>
-      </form>
+          <hr />
 
-      <button onClick={() => setLoginMode(!loginMode)}>
-        {loginMode ? 'New here? Sign Up' : 'Already have an account? Login'}
-      </button>
+          <h2>Create Flashcards for New Deck</h2>
+          <input placeholder="Front" value={front} onChange={(e) => setFront(e.target.value)} />
+          <input placeholder="Back" value={back} onChange={(e) => setBack(e.target.value)} />
+          <button onClick={addFlashcard}>Add Flashcard</button>
 
-      <button onClick={deleteAccount}>
-        Delete Account
-      </button>
+          <h3>Flashcards Added:</h3>
+          <ul>
+            {flashcards.map((card, idx) => (
+              <li key={idx}>
+                <strong>Front:</strong> {card.front} | <strong>Back:</strong> {card.back}
+              </li>
+            ))}
+          </ul>
 
-      <button onClick={logout}>
-        Logout
-      </button>
+          <input placeholder="Deck Name" value={deckName} onChange={(e) => setDeckName(e.target.value)} />
+          <button onClick={createDeck}>Save Deck</button>
 
-      <h2>Data</h2>
-      <div>
-        <input placeholder="Enter data..." value={message} onChange={(e) => setMessage(e.target.value)}/>
-        <button onClick={uploadData}>
-          Upload
-        </button>
-        <button onClick={fetchData}>
-          Fetch
-        </button>
+          <h2>My Decks</h2>
+          {decks.map((deck) => (
+            <div key={deck._id} style={{ margin: '10px', border: '1px solid gray', padding: '10px' }}>
+              <h4>{deck.name}</h4>
+              <ul>
+                {deck.cards.map((card, idx) => (
+                  <li key={idx}>
+                    <strong>Front:</strong> {card.front} | <strong>Back:</strong> {card.back}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </>
+      ) : (
+        <>
+          <h1>{loginMode ? 'Login' : 'Sign Up'}</h1>
+          <form onSubmit={handleAuthSubmit}>
+            <input placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
+            <input placeholder="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+            <button type="submit">{loginMode ? 'Login' : 'Sign Up'}</button>
+          </form>
 
-        {fetchedData && (
-          <div>
-            <p>{fetchedData}</p>
-          </div>
-        )}
-      </div>
+          <button onClick={() => setLoginMode(!loginMode)}>
+            {loginMode ? 'New here? Sign Up' : 'Already have an account? Login'}
+          </button>
+        </>
+      )
+    }
     </div>
   );
 }
