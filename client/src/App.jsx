@@ -14,6 +14,14 @@ function App() {
   const [selectedCardIds, setSelectedCardIds] = useState([]);
   const [decks, setDecks] = useState([]);
 
+  /* Modes:
+   * home: Refers to the homepage
+   * edit: Refers to the deck editor
+   * study: Refers to the study page
+   */
+  const [mode, setMode] = useState('home');
+  const [selectedDeck, setSelectedDeck] = useState(null);
+
   const URL = "http://localhost:5050/api";
 
   async function handleAuthSubmit(e) {
@@ -72,24 +80,22 @@ function App() {
   }
 
   async function createDeck() {
-    if (!deckName || flashcards.length === 0) {
-      alert('Please provide a deck name and at least one flashcard');
-      return;
-    }
-
     try {
       const res = await fetch(`${URL}/decks`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ name: deckName, cards: flashcards }),
+        body: JSON.stringify({ name: "Untitled", cards: [] }),
       });
 
       const result = await res.json();
-      alert(result.message);
-      setDeckName('');
-      setFlashcards([]);
-      fetchDecks();
+      if (res.ok) {
+        setSelectedDeck(result.deck);
+        setMode('edit');
+        fetchDecks();
+      } else {
+        alert(result.message);
+      }
     } catch (error) {
       console.error('Error:', error);
       alert('Error creating deck');
@@ -130,76 +136,151 @@ function App() {
     }
   }
 
+  function addNewCard() {
+    setSelectedDeck({ ...selectedDeck, cards:
+      [...selectedDeck.cards, { front: '', back: '' }]
+    });
+  }
+
+  function selectDeck(deck, newMode) {
+    setSelectedDeck({ ...deck });
+    setMode(newMode);
+  }
+
+  function handleCardChange(index, field, value) {
+    const updatedCards = [...selectedDeck.cards];
+    updatedCards[index][field] = value;
+    setSelectedDeck({ ...selectedDeck, cards: updatedCards });
+  }
+
+  function deleteCard(index) {
+    const updatedCards = [...selectedDeck.cards];
+    updatedCards.pop(index);
+    setSelectedDeck({ ...selectedDeck, cards: updatedCards });
+  }
+
+  async function saveDeckChanges() {
+    try {
+      const res = await fetch(`${URL}/decks/${selectedDeck._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(selectedDeck),
+      });
+
+      const result = await res.json();
+      alert(result.message);
+      setMode('home');
+      fetchDecks();
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error saving changes');
+    }
+  }
+
+  async function deleteDeck() {
+    if (!window.confirm('Are you sure you want to delete this deck?')) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`${URL}/decks/${selectedDeck._id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      const result = await res.json();
+      alert(result.message);
+      setMode('home');
+      fetchDecks();
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error deleting deck');
+    }
+  }
+
   useEffect(() => {
     checkLoginStatus();
   }, []);
 
-  function addFlashcard() {
-    if (!front || !back) {
-      alert('Please fill both front and back');
-      return;
-    }
-    setFlashcards([...flashcards, { front, back }]);
-    setFront('');
-    setBack('');
+
+  if (!loggedIn) {
+    return (
+      <div style={{ padding: 50 }}>
+        <h1>{loginMode ? 'Login' : 'Sign Up'}</h1>
+        <form onSubmit={handleAuthSubmit}>
+          <input placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
+          <input placeholder="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <button type="submit">{loginMode ? 'Login' : 'Sign Up'}</button>
+        </form>
+
+        <button onClick={() => setLoginMode(!loginMode)}>
+          {loginMode ? 'New here? Sign Up' : 'Already have an account? Login'}
+        </button>
+      </div>
+    );
   }
 
+  if (mode === 'edit' && selectedDeck) {
+    return (
+      <div style={{ padding: 50 }}>
+        <h2>Editing Deck</h2>
+        <input
+          value={selectedDeck.name}
+          onChange={(e) => setSelectedDeck({ ...selectedDeck, name: e.target.value })}
+          placeholder="Deck Name"
+          style={{ marginBottom: 20, fontSize: '1.2em' }}
+        />
+        {selectedDeck.cards.map((card, idx) => (
+          <div key={idx} style={{ marginBottom: 10 }}>
+            <input
+              value={card.front}
+              onChange={(e) => handleCardChange(idx, 'front', e.target.value)}
+              placeholder="Front"
+            />
+            <input
+              value={card.back}
+              onChange={(e) => handleCardChange(idx, 'back', e.target.value)}
+              placeholder="Back"
+            />
+            <button onClick={() => deleteCard(idx)}>Delete Card</button>
+          </div>
+        ))}
+        <button onClick={addNewCard}>Add New Card</button>
+        <br /><br />
+        <button onClick={saveDeckChanges}>Save Changes</button>
+        <button onClick={deleteDeck} style={{ color: 'red' }}>Delete Deck</button>
+        <button onClick={() => setMode('home')}>Back</button>
+      </div>
+    );
+  }
+  if (mode == 'study' && selectedDeck) {
+    return (
+      <div style={{ padding: 50 }}>
+        <h2>Studying Deck: {selectedDeck.name}</h2>
+        <p>(Study mode coming soon)</p>
+        <button onClick={() => setMode('home')}>Back</button>
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: 50 }}>
-      {loggedIn ? (
-        <>
-          <button onClick={deleteAccount}>Delete Account</button>
-          <button onClick={logout}>Logout</button>
+      <button onClick={deleteAccount}>Delete Account</button>
+      <button onClick={logout}>Logout</button>
 
-          <hr />
+      <hr />
 
-          <h2>Create Flashcards for New Deck</h2>
-          <input placeholder="Front" value={front} onChange={(e) => setFront(e.target.value)} />
-          <input placeholder="Back" value={back} onChange={(e) => setBack(e.target.value)} />
-          <button onClick={addFlashcard}>Add Flashcard</button>
+      <h2>Decks</h2>
+      {decks.map((deck) => (
+        <div key={deck._id} style={{ border: '1px solid gray', padding: '10px' }}>
+          <h4>{deck.name}</h4>
+          <button onClick={() => selectDeck(deck, 'edit')}>Edit</button>
+          <button onClick={() => selectDeck(deck, 'study')}>Study</button>
+        </div>
+      ))}
+      <button onClick={createDeck}>Create New Deck</button>
 
-          <h3>Flashcards Added:</h3>
-          <ul>
-            {flashcards.map((card, idx) => (
-              <li key={idx}>
-                <strong>Front:</strong> {card.front} | <strong>Back:</strong> {card.back}
-              </li>
-            ))}
-          </ul>
-
-          <input placeholder="Deck Name" value={deckName} onChange={(e) => setDeckName(e.target.value)} />
-          <button onClick={createDeck}>Save Deck</button>
-
-          <h2>My Decks</h2>
-          {decks.map((deck) => (
-            <div key={deck._id} style={{ margin: '10px', border: '1px solid gray', padding: '10px' }}>
-              <h4>{deck.name}</h4>
-              <ul>
-                {deck.cards.map((card, idx) => (
-                  <li key={idx}>
-                    <strong>Front:</strong> {card.front} | <strong>Back:</strong> {card.back}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </>
-      ) : (
-        <>
-          <h1>{loginMode ? 'Login' : 'Sign Up'}</h1>
-          <form onSubmit={handleAuthSubmit}>
-            <input placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
-            <input placeholder="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-            <button type="submit">{loginMode ? 'Login' : 'Sign Up'}</button>
-          </form>
-
-          <button onClick={() => setLoginMode(!loginMode)}>
-            {loginMode ? 'New here? Sign Up' : 'Already have an account? Login'}
-          </button>
-        </>
-      )
-    }
     </div>
   );
 }

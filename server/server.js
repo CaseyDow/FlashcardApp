@@ -4,6 +4,7 @@ import cors from 'cors';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
+import cookieParser from 'cookie-parser';
 
 import Deck from './models/Deck.js';
 import User from './models/User.js';
@@ -18,23 +19,11 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+app.use(cookieParser());
 
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('MongoDB connected!'))
   .catch((err) => console.error(err));
-
-function parseCookies(cookieHeader) {
-  const cookies = {};
-  if (!cookieHeader) return cookies;
-
-  cookieHeader.split(';').forEach(cookie => {
-    const [name, ...rest] = cookie.trim().split('=');
-    const value = rest.join('=');
-    cookies[name] = decodeURIComponent(value);
-  });
-
-  return cookies;
-}
 
 function authToken(id) {
   return jwt.sign({ id: id }, process.env.JWT_SECRET, { expiresIn: '7d' });
@@ -101,7 +90,7 @@ app.post('/api/user/login', async (req, res) => {
 
 async function authenticate(req, res, next) {
   try {
-    const { token } = parseCookies(req.headers.cookie);
+    const { token } = req.cookies;
     if (!token) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
@@ -115,16 +104,9 @@ async function authenticate(req, res, next) {
   }
 };
 
-app.delete('/api/user', async (req, res) => {
+app.delete('/api/user', authenticate, async (req, res) => {
   try {
-    const { token } = parseCookies(req.headers.cookie);
-    if (!token) {
-      return res.status(401).json({ message: 'Unauthorized' });
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    await User.findByIdAndDelete(decoded.id);
+    await User.findByIdAndDelete(req.userId);
 
     res.clearCookie('token');
     res.json({ message: 'Account deleted successfully.' });
@@ -167,5 +149,50 @@ app.get('/api/decks', authenticate, async (req, res) => {
     res.status(500).json({ message: 'Internal Server Error' });
   }
 });
+
+app.put('/api/decks/:id', authenticate, async (req, res) => {
+  const { id } = req.params;
+  const { name, cards } = req.body;
+
+  try {
+    const deck = await Deck.findById(id);
+
+    if (!deck) {
+      return res.status(400).json({ message: 'Deck not found' });
+    }
+
+    console.log(cards)
+
+    deck.name = name;
+    deck.cards = cards;
+
+    await deck.save();
+
+    res.json({ message: 'Deck updated successfully!' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error updating deck' });
+  }
+});
+
+app.delete('/api/decks/:id', authenticate, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const deck = await Deck.findById(id);
+
+    if (!deck) {
+      return res.status(400).json({ message: 'Deck not found' });
+    }
+
+    await deck.deleteOne();
+
+    res.json({ message: 'Deck deleted successfully!' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error deleting deck' });
+  }
+});
+
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
