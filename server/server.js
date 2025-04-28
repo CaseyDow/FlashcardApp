@@ -35,10 +35,71 @@ function parseCookies(cookieHeader) {
   return cookies;
 }
 
-async function authMiddleware(req, res, next) {
+function authToken(id) {
+  return jwt.sign({ id: id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+}
+
+app.post('/api/user/signup', async (req, res) => {
+  const { username, password } = req.body;
+
+  try {
+    if (!username || !password) {
+      return res.status(400).json({ message: 'Please input a username and password' });
+    }
+
+    let user = await User.findOne({ username: username });
+    if (user) {
+      return res.status(400).json({ message: 'User exists' });
+    }
+
+    const hash = await bcrypt.hash(password, 10);
+    const newUser = await User.create({ username: username, password: hash });
+
+    res.cookie('token', authToken(newUser._id), { httpOnly: true, sameSite: 'strict', secure: false });
+
+    res.json({ message: 'Signup successful!' });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.post('/api/user/login', async (req, res) => {
+  const { username, password } = req.body;
+
+  try {
+    if (!username || !password) {
+      return res.status(400).json({ message: 'Please input a username and password' });
+    }
+
+    let user = await User.findOne({ username: username });
+    if (!user) {
+      return res.status(400).json({ message: 'User not found' });
+    }
+
+    const correctPassword = await bcrypt.compare(password, user.password);
+    if (!correctPassword) {
+      return res.status(400).json({ message: 'Incorrect password' });
+    }
+
+    res.cookie('token', authToken(user._id), { httpOnly: true, sameSite: 'strict', secure: false });
+
+    res.json({
+      message: 'Login successful',
+      data: user.data
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+async function authenticate(req, res, next) {
   try {
     const { token } = parseCookies(req.headers.cookie);
-    if (!token) return res.status(401).json({ message: 'Unauthorized' });
+    if (!token) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.userId = decoded.id;
@@ -49,55 +110,31 @@ async function authMiddleware(req, res, next) {
   }
 };
 
-function authToken(id) {
-  return jwt.sign({ id: id }, process.env.JWT_SECRET, { expiresIn: '7d' });
-}
-
-app.post('/api/user', async (req, res) => {
-  const { username, password } = req.body;
-  const { action } = req.query;
-
+app.delete('/api/user', async (req, res) => {
   try {
-    if (username == null || username == '' || password == null || password == '') {
-      return res.status(400).json({ message: 'Please input a username and password' })
-    }
-    let user = await User.findOne({ username: username });
-    if (action == 'signup') {
-      if (user) {
-        return res.status(400).json({ message: 'User exists' });
-      }
-
-      const hash = await bcrypt.hash(password, 10);
-      const newUser = await User.create({ username: username, password: hash });
-
-      res.cookie('token', authToken(newUser._id), { httpOnly: true, sameSite: 'strict', secure: false });
-
-      return res.json({ message: 'Signup successful!' });
-    } else if (action == 'login') {
-      if (!user) {
-        return res.status(400).json({ message: 'User not found' });
-      }
-      const correctPassword = await bcrypt.compare(password, user.password);
-      if (!correctPassword) {
-        return res.status(400).json({ message: 'Incorrect password' });
-      }
-
-      res.cookie('token', authToken(user._id), { httpOnly: true, sameSite: 'strict', secure: false });
-
-      return res.json({
-        message: 'Login successful',
-        data: user.data
-      });
+    const { token } = parseCookies(req.headers.cookie);
+    if (!token) {
+      return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    return res.status(400).json({ message:'Unknown action' })
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ message: 'Server error' });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    await User.findByIdAndDelete(decoded.id);
+
+    res.clearCookie('token');
+    res.json({ message: 'Account deleted successfully.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to delete account.' });
   }
 });
 
-app.post('/api/private/upload', authMiddleware, async (req, res) => {
+app.post('/api/user/logout', (req, res) => {
+  res.clearCookie('token');
+  res.json({ message: 'Logged out.' });
+});
+
+app.post('/api/private/upload', authenticate, async (req, res) => {
   const { data } = req.body;
 
   const user = await User.findById(req.userId);
@@ -107,12 +144,11 @@ app.post('/api/private/upload', authMiddleware, async (req, res) => {
 
   user.data = data;
   await user.save();
-  console.log(req.body)
-  console.log(data)
+
   res.json({ message: 'Data saved!' });
 });
 
-app.get('/api/private/fetch', authMiddleware, async (req, res) => {
+app.get('/api/private/fetch', authenticate, async (req, res) => {
   const user = await User.findById(req.userId);
   if (!user) {
     return res.status(404).json({ message: 'User not found' });
