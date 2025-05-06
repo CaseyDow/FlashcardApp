@@ -122,14 +122,21 @@ app.post('/api/user/logout', (req, res) => {
 });
 
 app.post('/api/decks', authenticate, async (req, res) => {
-  const { name, cards } = req.body;
+  const { name, cards, isPublic } = req.body;
+
+  console.log(req.body);
+  console.log(isPublic);
 
   if (name == null || name == '' || !Array.isArray(cards)) {
     return res.status(400).json({ message: 'Invalid deck' });
   }
 
   try {
-    const deck = await Deck.create({ name: name, cards: cards });
+    const deck = await Deck.create({
+      name: name,
+      cards: cards,
+      isPublic: isPublic
+    });
     await User.findByIdAndUpdate(req.userId, {
       $push: { decks: deck._id }
     });
@@ -152,7 +159,7 @@ app.get('/api/decks', authenticate, async (req, res) => {
 
 app.put('/api/decks/:id', authenticate, async (req, res) => {
   const { id } = req.params;
-  const { name, cards } = req.body;
+  const { name, cards, isPublic } = req.body;
 
   try {
     const deck = await Deck.findById(id);
@@ -163,6 +170,7 @@ app.put('/api/decks/:id', authenticate, async (req, res) => {
 
     deck.name = name;
     deck.cards = cards;
+    deck.isPublic = isPublic;
 
     await deck.save();
 
@@ -190,6 +198,11 @@ app.delete('/api/decks/:id', authenticate, async (req, res) => {
     console.error(err);
     res.status(500).json({ message: 'Error deleting deck' });
   }
+});
+
+app.get('/api/decks/public', async (req, res) => {
+  const decks = await Deck.find({ isPublic: true });
+  res.json({ decks });
 });
 
 

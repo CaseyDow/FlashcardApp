@@ -18,12 +18,15 @@ function App() {
    * home: Refers to the homepage
    * edit: Refers to the deck editor
    * study: Refers to the study page
+   * public: Refers to the public deck viewer
    */
   const [mode, setMode] = useState('home');
   const [selectedDeck, setSelectedDeck] = useState(null);
 
   const [studyIndex, setStudyIndex] = useState(0);
   const [studyFront, setStudyFront] = useState(true);
+
+  const [publicDecks, setPublicDecks] = useState([])
 
   const URL = "http://localhost:5050/api";
 
@@ -88,7 +91,7 @@ function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ name: "Untitled", cards: [] }),
+        body: JSON.stringify({ name: "Untitled", cards: [], isPublic: true }),
       });
 
       const result = await res.json();
@@ -113,6 +116,7 @@ function App() {
       });
 
       const result = await res.json();
+      console.log(result.decks)
       setDecks(result.decks || []);
     } catch (error) {
       console.error('Error:', error);
@@ -168,7 +172,10 @@ function App() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify(selectedDeck),
+        body: JSON.stringify({
+          ...selectedDeck,
+          isPublic: selectedDeck.isPublic
+        }),
       });
 
       const result = await res.json();
@@ -200,6 +207,15 @@ function App() {
       console.error('Error:', error);
       alert('Error deleting deck');
     }
+  }
+
+  async function fetchPublicDecks() {
+    const res = await fetch(`${URL}/decks/public`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+    const result = await res.json();
+    setPublicDecks(result.decks || []);
   }
 
   useEffect(() => {
@@ -258,6 +274,15 @@ function App() {
           placeholder="Deck Name"
           style={{ marginBottom: 20, fontSize: '1.2em' }}
         />
+        <label>
+          <input
+            type="checkbox"
+            checked={selectedDeck.isPublic || false}
+            onChange={(e) => setSelectedDeck({ ...selectedDeck, isPublic: e.target.checked })}
+          />
+          Public
+        </label>
+
         {selectedDeck.cards.map((card, idx) => (
           <div key={idx} style={{ marginBottom: 10 }}>
             <input
@@ -329,6 +354,32 @@ function App() {
     );
   }
 
+  if (mode == 'public') {
+    return (
+      <div style={{ padding: 50 }}>
+        <h2>Public Decks</h2>
+        {publicDecks.map((deck) => (
+          <div key={deck._id} style={{ border: '1px solid gray', padding: 10 }}>
+            <h4>{deck.name}</h4>
+            <button onClick={() => selectDeck(deck, 'study')}>Study</button>
+            <button onClick={async () => {
+              const res = await fetch(`${URL}/decks`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ name: deck.name, cards: deck.cards, isPublic: false }),
+              });
+              const result = await res.json();
+              alert('Deck added to your account');
+              fetchDecks();
+            }}>Add to My Decks</button>
+          </div>
+        ))}
+        <button onClick={() => setMode('home')}>Back</button>
+      </div>
+    );
+  }
+
   return (
     <div style={{ padding: 50 }}>
       <button onClick={deleteAccount}>Delete Account</button>
@@ -345,7 +396,10 @@ function App() {
         </div>
       ))}
       <button onClick={createDeck}>Create New Deck</button>
-
+      <button onClick={() => {
+        setMode('public');
+        fetchPublicDecks();
+      }}>Explore Public Decks</button>
     </div>
   );
 }
