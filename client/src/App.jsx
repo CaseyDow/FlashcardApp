@@ -91,7 +91,7 @@ function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ name: "Untitled", cards: [], isPublic: true }),
+        body: JSON.stringify({ name: "Untitled", cards: [], isPublic: false }),
       });
 
       const result = await res.json();
@@ -215,7 +215,8 @@ function App() {
       credentials: 'include',
     });
     const result = await res.json();
-    setPublicDecks(result.decks || []);
+    console.log(result.decks)
+    setPublicDecks(result.decks);
   }
 
   useEffect(() => {
@@ -245,67 +246,6 @@ function App() {
     return () => window.removeEventListener('keydown', keyDown);
 
   }, [mode]);
-
-
-  if (!loggedIn) {
-    return (
-      <div style={{ padding: 50 }}>
-        <h1>{loginMode ? 'Login' : 'Sign Up'}</h1>
-        <form onSubmit={handleAuthSubmit}>
-          <input placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
-          <input placeholder="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-          <button type="submit">{loginMode ? 'Login' : 'Sign Up'}</button>
-        </form>
-
-        <button onClick={() => setLoginMode(!loginMode)}>
-          {loginMode ? 'New here? Sign Up' : 'Already have an account? Login'}
-        </button>
-      </div>
-    );
-  }
-
-  if (mode == 'edit' && selectedDeck) {
-    return (
-      <div style={{ padding: 50 }}>
-        <h2>Editing Deck</h2>
-        <input
-          value={selectedDeck.name}
-          onChange={(e) => setSelectedDeck({ ...selectedDeck, name: e.target.value })}
-          placeholder="Deck Name"
-          style={{ marginBottom: 20, fontSize: '1.2em' }}
-        />
-        <label>
-          <input
-            type="checkbox"
-            checked={selectedDeck.isPublic || false}
-            onChange={(e) => setSelectedDeck({ ...selectedDeck, isPublic: e.target.checked })}
-          />
-          Public
-        </label>
-
-        {selectedDeck.cards.map((card, idx) => (
-          <div key={idx} style={{ marginBottom: 10 }}>
-            <input
-              value={card.front}
-              onChange={(e) => handleCardChange(idx, 'front', e.target.value)}
-              placeholder="Front"
-            />
-            <input
-              value={card.back}
-              onChange={(e) => handleCardChange(idx, 'back', e.target.value)}
-              placeholder="Back"
-            />
-            <button onClick={() => deleteCard(idx)}>Delete Card</button>
-          </div>
-        ))}
-        <button onClick={addNewCard}>Add New Card</button>
-        <br /><br />
-        <button onClick={saveDeckChanges}>Save Changes</button>
-        <button onClick={deleteDeck} style={{ color: 'red' }}>Delete Deck</button>
-        <button onClick={() => setMode('home')}>Back</button>
-      </div>
-    );
-  }
 
   if (mode == 'study' && selectedDeck) {
     return (
@@ -358,11 +298,11 @@ function App() {
     return (
       <div style={{ padding: 50 }}>
         <h2>Public Decks</h2>
-        {publicDecks.map((deck) => (
+        {publicDecks.length > 0 ? publicDecks.map((deck) => (
           <div key={deck._id} style={{ border: '1px solid gray', padding: 10 }}>
             <h4>{deck.name}</h4>
             <button onClick={() => selectDeck(deck, 'study')}>Study</button>
-            <button onClick={async () => {
+            {loggedIn && <button onClick={async () => {
               const res = await fetch(`${URL}/decks`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -372,9 +312,73 @@ function App() {
               const result = await res.json();
               alert('Deck added to your account');
               fetchDecks();
-            }}>Add to My Decks</button>
+            }}>Copy to My Decks</button>}
+          </div>
+        )) : <p>No Decks Available</p>}
+        <button onClick={() => setMode('home')}>Back</button>
+      </div>
+    );
+  }
+
+  if (!loggedIn) {
+    return (
+      <div style={{ padding: 50 }}>
+        <h1>{loginMode ? 'Login' : 'Sign Up'}</h1>
+        <form onSubmit={handleAuthSubmit}>
+          <input placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
+          <input placeholder="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <button type="submit">{loginMode ? 'Login' : 'Sign Up'}</button>
+        </form>
+
+        <button onClick={() => setLoginMode(!loginMode)}>
+          {loginMode ? 'New here? Sign Up' : 'Already have an account? Login'}
+        </button>
+        <button onClick={() => {
+          setMode('public');
+          fetchPublicDecks();
+        }}>Explore Public Decks</button>
+      </div>
+    );
+  }
+
+  if (mode == 'edit' && selectedDeck) {
+    return (
+      <div style={{ padding: 50 }}>
+        <h2>Editing Deck</h2>
+        <input
+          value={selectedDeck.name}
+          onChange={(e) => setSelectedDeck({ ...selectedDeck, name: e.target.value })}
+          placeholder="Deck Name"
+          style={{ marginBottom: 20, fontSize: '1.2em' }}
+        />
+        <label>
+          <input
+            type="checkbox"
+            checked={selectedDeck.isPublic}
+            onChange={(e) => setSelectedDeck({ ...selectedDeck, isPublic: e.target.checked })}
+          />
+          Public
+        </label>
+
+        {selectedDeck.cards.map((card, idx) => (
+          <div key={idx} style={{ marginBottom: 10 }}>
+            <input
+              value={card.front}
+              onChange={(e) => handleCardChange(idx, 'front', e.target.value)}
+              placeholder="Front"
+            />
+            <input
+              value={card.back}
+              onChange={(e) => handleCardChange(idx, 'back', e.target.value)}
+              placeholder="Back"
+            />
+            <button onClick={() => deleteCard(idx)}>Delete Card</button>
           </div>
         ))}
+        <button onClick={addNewCard}>Add New Card</button>
+        <br /><br />
+        <button onClick={saveDeckChanges}>Save Changes</button>
+        <button onClick={deleteDeck} style={{ color: 'red' }}>Delete Deck</button>
         <button onClick={() => setMode('home')}>Back</button>
       </div>
     );

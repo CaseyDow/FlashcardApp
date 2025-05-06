@@ -162,6 +162,11 @@ app.put('/api/decks/:id', authenticate, async (req, res) => {
   const { name, cards, isPublic } = req.body;
 
   try {
+    const user = await User.findById(req.session.userId);
+    if (!user.decks.includes(req.params.id)) {
+      return res.status(403).json({ message: 'Not authorized to edit this deck' });
+    }
+
     const deck = await Deck.findById(id);
 
     if (!deck) {
@@ -185,6 +190,11 @@ app.delete('/api/decks/:id', authenticate, async (req, res) => {
   const { id } = req.params;
 
   try {
+    const user = await User.findById(req.session.userId);
+    if (!user.decks.includes(req.params.id)) {
+      return res.status(403).json({ message: 'Not authorized to edit this deck' });
+    }
+
     const deck = await Deck.findById(id);
 
     if (!deck) {
@@ -192,6 +202,7 @@ app.delete('/api/decks/:id', authenticate, async (req, res) => {
     }
 
     await deck.deleteOne();
+    user.decks = user.decks.filter(deckid => deckid.toString() != req.params.id);
 
     res.json({ message: 'Deck deleted successfully!' });
   } catch (err) {
