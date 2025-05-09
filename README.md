@@ -8,7 +8,7 @@ Flashcard Deck Search\
 Public/Private Flashcards\
 Flashcard Deck Upload/Download\
 Flashcard Creation and Editing\
-Flashcard Studying\
+Flashcard Studying
 
 Tools Used:
 React, Node.js, MongoDB
