@@ -42,7 +42,6 @@ function App() {
       });
 
       const result = await res.json();
-      alert(result.message);
       checkLoginStatus();
     } catch (error) {
       console.error('Error:', error);
@@ -62,7 +61,6 @@ function App() {
       });
 
       const result = await res.json();
-      alert(result.message);
     } catch (error) {
       console.error('Error:', error);
       alert('Error');
@@ -78,7 +76,6 @@ function App() {
 
       setLoggedIn(false);
       const result = await res.json();
-      alert(result.message);
     } catch (error) {
       console.error('Error:', error);
       alert('Error');
@@ -116,7 +113,7 @@ function App() {
       });
 
       const result = await res.json();
-      console.log(result.decks)
+
       setDecks(result.decks || []);
     } catch (error) {
       console.error('Error:', error);
@@ -179,7 +176,7 @@ function App() {
       });
 
       const result = await res.json();
-      alert(result.message);
+
       setMode('home');
       fetchDecks();
     } catch (error) {
@@ -200,7 +197,7 @@ function App() {
       });
 
       const result = await res.json();
-      alert(result.message);
+
       setMode('home');
       fetchDecks();
     } catch (error) {
@@ -310,7 +307,6 @@ function App() {
                 body: JSON.stringify({ name: deck.name, cards: deck.cards, isPublic: false }),
               });
               const result = await res.json();
-              alert('Deck added to your account');
               fetchDecks();
             }}>Copy to My Decks</button>}
           </div>
