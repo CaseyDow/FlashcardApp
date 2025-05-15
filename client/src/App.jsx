@@ -318,21 +318,141 @@ function App() {
 
   if (!loggedIn) {
     return (
-      <div style={{ padding: 50 }}>
-        <h1>{loginMode ? 'Login' : 'Sign Up'}</h1>
-        <form onSubmit={handleAuthSubmit}>
-          <input placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
-          <input placeholder="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-          <button type="submit">{loginMode ? 'Login' : 'Sign Up'}</button>
-        </form>
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        padding: '20px',
+        overflow: 'auto'
+      }}>
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.95)',
+          padding: '40px',
+          borderRadius: '15px',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          width: '100%',
+          maxWidth: '400px',
+          textAlign: 'center'
+        }}>
+          <h1 style={{
+            color: '#333',
+            marginBottom: '30px',
+            fontSize: '2.5em',
+            fontWeight: '600'
+          }}>{loginMode ? 'Welcome Back' : 'Create Account'}</h1>
+          
+          <form onSubmit={handleAuthSubmit} style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '20px',
+            marginBottom: '25px'
+          }}>
+            <input 
+              placeholder="Username" 
+              value={username} 
+              onChange={(e) => setUsername(e.target.value)}
+              style={{
+                padding: '12px 15px',
+                borderRadius: '8px',
+                border: '1px solid #ddd',
+                fontSize: '16px',
+                transition: 'border-color 0.3s ease',
+                outline: 'none'
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#667eea'}
+              onBlur={(e) => e.target.style.borderColor = '#ddd'}
+            />
+            <input 
+              placeholder="Password" 
+              type="password" 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)}
+              style={{
+                padding: '12px 15px',
+                borderRadius: '8px',
+                border: '1px solid #ddd',
+                fontSize: '16px',
+                transition: 'border-color 0.3s ease',
+                outline: 'none'
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#667eea'}
+              onBlur={(e) => e.target.style.borderColor = '#ddd'}
+            />
+            <button 
+              type="submit"
+              style={{
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                color: 'white',
+                padding: '12px',
+                borderRadius: '8px',
+                border: 'none',
+                fontSize: '16px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'transform 0.2s ease',
+                marginTop: '10px'
+              }}
+              onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
+              onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
+            >
+              {loginMode ? 'Sign In' : 'Create Account'}
+            </button>
+          </form>
 
-        <button onClick={() => setLoginMode(!loginMode)}>
-          {loginMode ? 'New here? Sign Up' : 'Already have an account? Login'}
-        </button>
-        <button onClick={() => {
-          setMode('public');
-          fetchPublicDecks();
-        }}>Explore Public Decks</button>
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '15px'
+          }}>
+            <button 
+              onClick={() => setLoginMode(!loginMode)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#667eea',
+                cursor: 'pointer',
+                fontSize: '14px',
+                padding: '8px'
+              }}
+            >
+              {loginMode ? 'New here? Create an account' : 'Already have an account? Sign in'}
+            </button>
+            
+            <button 
+              onClick={() => {
+                setMode('public');
+                fetchPublicDecks();
+              }}
+              style={{
+                background: 'transparent',
+                border: '1px solid #667eea',
+                color: '#667eea',
+                padding: '10px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseOver={(e) => {
+                e.target.style.background = '#667eea';
+                e.target.style.color = 'white';
+              }}
+              onMouseOut={(e) => {
+                e.target.style.background = 'transparent';
+                e.target.style.color = '#667eea';
+              }}
+            >
+              Explore Public Decks
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
