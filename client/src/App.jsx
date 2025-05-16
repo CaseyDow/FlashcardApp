@@ -215,6 +215,70 @@ function App() {
     console.log(result.decks)
     setPublicDecks(result.decks);
   }
+// function to handle CSV import
+async function handleCSVImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const text = e.target.result;
+    const rows = text.split('\n').map(row => row.split(',').map(cell => cell.trim()));
+    
+    
+    const cards = rows.slice(1).map(row => ({
+      front: row[0] || '',
+      back: row[1] || ''
+    })).filter(card => card.front || card.back);
+
+    // new deck with these imported cards
+    try {
+      const res = await fetch(`${URL}/decks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ 
+          name: file.name.replace('.csv', ''), 
+          cards: cards, 
+          isPublic: false 
+        }),
+      });
+
+      const result = await res.json();
+      if (res.ok) {
+        fetchDecks();
+        alert('CSV imported successfully!');
+      } else {
+        alert(result.message);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error importing CSV');
+    }
+  };
+  reader.readAsText(file);
+}
+
+// csv exporting
+function exportToCSV(deck) {
+  const headers = ['Front', 'Back'];
+  const rows = deck.cards.map(card => [card.front, card.back]);
+  const csvContent = [
+    headers.join(','),
+    ...rows.map(row => row.join(','))
+  ].join('\n');
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = window.URL.createObjectURL(blob);
+  link.setAttribute('href', url);
+  link.setAttribute('download', `${deck.name}.csv`);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
+}
 
   useEffect(() => {
     checkLoginStatus();
