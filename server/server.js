@@ -208,6 +208,6 @@ app.delete('/api/decks/:id', authenticate, async (req, res) => {
 app.get('/api/decks/public', async (req, res) => {
   const decks = await Deck.find({ isPublic: true });
   res.json({ decks });
-});s
+});
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
