@@ -28,6 +28,9 @@ function App() {
 
   const [publicDecks, setPublicDecks] = useState([])
 
+  // for search
+  const [publicSearchTerm, setPublicSearchTerm] = useState('');
+
   const URL = "http://localhost:5050/api";
 
   async function handleAuthSubmit(e) {
@@ -296,10 +299,22 @@ function App() {
   }
 
   if (mode == 'public') {
+    // Filter public decks based on the search term
+    const filteredPublicDecks = publicDecks.filter(deck =>
+      deck.name.toLowerCase().includes(publicSearchTerm.toLowerCase())
+    );
     return (
       <div style={{ padding: 50 }}>
         <h2>Public Decks</h2>
-        {publicDecks.length > 0 ? publicDecks.map((deck) => (
+        <input
+          type="text"
+          placeholder="Search by deck name..."
+          value={publicSearchTerm}
+          onChange={(e) => setPublicSearchTerm(e.target.value)}
+          style={{ marginBottom: '20px', padding: '10px', width: 'calc(100% - 22px)' }}
+        />
+
+        {filteredPublicDecks.length > 0 ? filteredPublicDecks.map((deck) => (
           <div key={deck._id} style={{ border: '1px solid gray', padding: 10 }}>
             <h4>{deck.name}</h4>
             <button onClick={() => selectDeck(deck, 'study')}>Study</button>
@@ -315,7 +330,9 @@ function App() {
             }}>Copy to My Decks</button>}
           </div>
         )) : <p>No Decks Available</p>}
-        <button onClick={() => setMode('home')}>Back</button>
+        <button onClick={() => {setMode('home')
+          setPublicSearchTerm('');
+        }}>Back</button>
       </div>
     );
   }
