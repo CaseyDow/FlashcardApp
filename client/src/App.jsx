@@ -577,6 +577,7 @@ function exportToCSV(deck) {
           <h4>{deck.name}</h4>
           <button onClick={() => selectDeck(deck, 'edit')}>Edit</button>
           <button onClick={() => selectDeck(deck, 'study')}>Study</button>
+          <button onClick={() => exportToCSV(deck)}>Export to CSV</button>
         </div>
       ))}
       <button onClick={createDeck}>Create New Deck</button>
@@ -584,6 +585,18 @@ function exportToCSV(deck) {
         setMode('public');
         fetchPublicDecks();
       }}>Explore Public Decks</button>
+      <div style={{ marginTop: '20px' }}>
+        <h3>Import CSV</h3>
+        <input
+          type="file"
+          accept=".csv"
+          onChange={handleCSVImport}
+          style={{ marginTop: '10px' }}
+        />
+        <p style={{ fontSize: '0.8em', color: '#666' }}>
+          CSV should have two columns: Front and Back
+        </p>
+      </div>
     </div>
   );
 }
