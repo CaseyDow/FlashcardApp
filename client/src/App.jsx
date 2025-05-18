@@ -84,6 +84,7 @@ function App() {
 
   async function createDeck() {
     try {
+      // console.log('about to create deck as author:', username)
       const res = await fetch(`${URL}/decks`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -92,6 +93,7 @@ function App() {
       });
 
       const result = await res.json();
+      // console.log('deck returned from API:', result.deck);
       if (res.ok) {
         setSelectedDeck(result.deck);
         setMode('edit');
@@ -147,7 +149,8 @@ function App() {
   }
 
   function selectDeck(deck, newMode) {
-    setSelectedDeck({ ...deck });
+    setSelectedDeck({ ...deck, author: username });
+    alert('Author set to ' + username)
     setMode(newMode);
   }
 
@@ -171,7 +174,8 @@ function App() {
         credentials: 'include',
         body: JSON.stringify({
           ...selectedDeck,
-          isPublic: selectedDeck.isPublic
+          isPublic: selectedDeck.isPublic,
+          author: username
         }),
       });
 
