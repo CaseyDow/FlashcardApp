@@ -148,6 +148,7 @@ function App() {
 
   function selectDeck(deck, newMode) {
     setSelectedDeck({ ...deck });
+    setStudyIndex(0);
     setMode(newMode);
   }
 
