@@ -509,7 +509,7 @@ function App() {
       <hr />
 
       <h2>Decks</h2>
-      {decks.map((deck) => (
+      {decks.sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase()).map((deck) => (
         <div key={deck._id} style={{ border: '1px solid gray', padding: '10px' }}>
           <h4>{deck.name}</h4>
           <button onClick={() => selectDeck(deck, 'edit')}>Edit</button>
