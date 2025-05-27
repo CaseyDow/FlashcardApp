@@ -165,6 +165,10 @@ function App() {
   }
 
   async function saveDeckChanges() {
+    const filteredCards = [...selectedDeck.cards].filter(
+        ({ front, back }) => front.trim() != "" || back.trim() != ""
+      );
+      
     try {
       const res = await fetch(`${URL}/decks/${selectedDeck._id}`, {
         method: 'PUT',
@@ -172,6 +176,7 @@ function App() {
         credentials: 'include',
         body: JSON.stringify({
           ...selectedDeck,
+          cards: filteredCards,
           isPublic: selectedDeck.isPublic
         }),
       });
@@ -509,7 +514,7 @@ function App() {
       <hr />
 
       <h2>Decks</h2>
-      {decks.sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase()).map((deck) => (
+      {decks.sort((a, b) => a.name.localeCompare(b.name)).map((deck) => (
         <div key={deck._id} style={{ border: '1px solid gray', padding: '10px' }}>
           <h4>{deck.name}</h4>
           <button onClick={() => selectDeck(deck, 'edit')}>Edit</button>
