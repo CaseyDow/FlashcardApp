@@ -496,7 +496,7 @@ function App() {
         <br /><br />
         <button onClick={saveDeckChanges}>Save Changes</button>
         <button onClick={deleteDeck} style={{ color: 'red' }}>Delete Deck</button>
-        <button onClick={() => setMode('home')}>Back</button>
+        <button onClick={() => {confirm("Are you sure you want to leave?") && setMode('home')}}>Back</button>
       </div>
     );
   }
