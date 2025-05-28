@@ -459,43 +459,455 @@ function App() {
 
   if (mode == 'edit' && selectedDeck) {
     return (
-      <div style={{ padding: 50 }}>
-        <h2>Editing Deck</h2>
-        <input
-          value={selectedDeck.name}
-          onChange={(e) => setSelectedDeck({ ...selectedDeck, name: e.target.value })}
-          placeholder="Deck Name"
-          style={{ marginBottom: 20, fontSize: '1.2em' }}
-        />
-        <label>
-          <input
-            type="checkbox"
-            checked={selectedDeck.isPublic}
-            onChange={(e) => setSelectedDeck({ ...selectedDeck, isPublic: e.target.checked })}
-          />
-          Public
-        </label>
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        padding: '20px',
+        overflow: 'auto'
+      }}>
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.95)',
+          padding: '40px',
+          borderRadius: '15px',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          width: '100%',
+          maxWidth: '800px',
+          textAlign: 'center'
+        }}>
+          <h1 style={{
+            color: '#333',
+            marginBottom: '30px',
+            fontSize: '2.5em',
+            fontWeight: '600'
+          }}>Editing Deck</h1>
 
-        {selectedDeck.cards.map((card, idx) => (
-          <div key={idx} style={{ marginBottom: 10 }}>
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '20px',
+            width: '100%'
+          }}>
             <input
-              value={card.front}
-              onChange={(e) => handleCardChange(idx, 'front', e.target.value)}
-              placeholder="Front"
+              value={selectedDeck.name}
+              onChange={(e) => setSelectedDeck({ ...selectedDeck, name: e.target.value })}
+              placeholder="Deck Name"
+              style={{
+                padding: '12px 15px',
+                borderRadius: '8px',
+                border: '1px solid #ddd',
+                fontSize: '16px',
+                transition: 'border-color 0.3s ease',
+                outline: 'none',
+                width: '100%'
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#667eea'}
+              onBlur={(e) => e.target.style.borderColor = '#ddd'}
             />
-            <input
-              value={card.back}
-              onChange={(e) => handleCardChange(idx, 'back', e.target.value)}
-              placeholder="Back"
-            />
-            <button onClick={() => deleteCard(idx)}>Delete Card</button>
+
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              marginBottom: '20px'
+            }}>
+              <input
+                type="checkbox"
+                checked={selectedDeck.isPublic}
+                onChange={(e) => setSelectedDeck({ ...selectedDeck, isPublic: e.target.checked })}
+                style={{
+                  width: '20px',
+                  height: '20px'
+                }}
+              />
+              <span style={{
+                color: '#333',
+                fontSize: '16px'
+              }}>Public</span>
+            </div>
+
+            {selectedDeck.cards.map((card, idx) => (
+              <div key={idx} style={{
+                background: '#fff',
+                padding: '20px',
+                borderRadius: '10px',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+                transition: 'transform 0.2s ease',
+                marginBottom: '20px'
+              }}
+              onMouseEnter={(e) => e.target.style.transform = 'scale(1.01)'}
+              onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+              >
+                <input
+                  value={card.front}
+                  onChange={(e) => handleCardChange(idx, 'front', e.target.value)}
+                  placeholder="Front"
+                  style={{
+                    padding: '12px 15px',
+                    borderRadius: '8px',
+                    border: '1px solid #ddd',
+                    fontSize: '16px',
+                    transition: 'border-color 0.3s ease',
+                    outline: 'none',
+                    width: '100%'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#667eea'}
+                  onBlur={(e) => e.target.style.borderColor = '#ddd'}
+                />
+                <input
+                  value={card.back}
+                  onChange={(e) => handleCardChange(idx, 'back', e.target.value)}
+                  placeholder="Back"
+                  style={{
+                    padding: '12px 15px',
+                    borderRadius: '8px',
+                    border: '1px solid #ddd',
+                    fontSize: '16px',
+                    transition: 'border-color 0.3s ease',
+                    outline: 'none',
+                    width: '100%',
+                    marginTop: '10px'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#667eea'}
+                  onBlur={(e) => e.target.style.borderColor = '#ddd'}
+                />
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  marginTop: '10px'
+                }}>
+                  <button 
+                    onClick={() => deleteCard(idx)}
+                    style={{
+                      background: '#ff6b6b',
+                      color: 'white',
+                      padding: '8px 15px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Delete Card
+                  </button>
+                </div>
+              </div>
+            ))}
+
+            <div style={{
+              display: 'flex',
+              gap: '10px',
+              justifyContent: 'flex-end'
+            }}>
+              <button 
+                onClick={addNewCard}
+                style={{
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  color: 'white',
+                  padding: '12px 20px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'transform 0.2s ease'
+                }}
+                onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+              >
+                Add New Card
+              </button>
+              <button 
+                onClick={() => setMode('home')}
+                style={{
+                  background: '#f0f0f0',
+                  color: '#333',
+                  padding: '12px 20px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'transform 0.2s ease'
+                }}
+                onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+              >
+                Back
+              </button>
+            </div>
+
+            <div style={{
+              display: 'flex',
+              gap: '10px',
+              justifyContent: 'flex-end'
+            }}>
+              <button 
+                onClick={deleteDeck}
+                style={{
+                  background: '#ff6b6b',
+                  color: 'white',
+                  padding: '12px 20px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }}
+              >
+                Delete Deck
+              </button>
+              <button 
+                onClick={saveDeckChanges}
+                style={{
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  color: 'white',
+                  padding: '12px 20px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }}
+              >
+                Save Changes
+              </button>
+            </div>
           </div>
-        ))}
-        <button onClick={addNewCard}>Add New Card</button>
-        <br /><br />
-        <button onClick={saveDeckChanges}>Save Changes</button>
-        <button onClick={deleteDeck} style={{ color: 'red' }}>Delete Deck</button>
-        <button onClick={() => setMode('home')}>Back</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (mode == 'home') {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        padding: '20px',
+        overflow: 'auto'
+      }}>
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.95)',
+          padding: '40px',
+          borderRadius: '15px',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          width: '100%',
+          maxWidth: '800px',
+          textAlign: 'center'
+        }}>
+          <h1 style={{
+            color: '#333',
+            marginBottom: '30px',
+            fontSize: '2.5em',
+            fontWeight: '600'
+          }}>Flashcard App</h1>
+          
+          {loggedIn ? (
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '20px',
+              width: '100%'
+            }}>
+              <div style={{
+                display: 'flex',
+                gap: '10px',
+                justifyContent: 'flex-start'
+              }}>
+                <button 
+                  onClick={createDeck}
+                  style={{
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    color: 'white',
+                    padding: '12px 20px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                  onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+                >
+                  Create New Deck
+                </button>
+                <button 
+                  onClick={fetchPublicDecks}
+                  style={{
+                    background: '#f0f0f0',
+                    color: '#333',
+                    padding: '12px 20px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                  onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+                >
+                  Browse Public Decks
+                </button>
+              </div>
+              
+              {decks.length > 0 ? (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                  gap: '20px',
+                  width: '100%'
+                }}>
+                  {decks.map((deck) => (
+                    <div key={deck._id} style={{
+                      background: '#fff',
+                      padding: '15px',
+                      borderRadius: '10px',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+                      transition: 'transform 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => e.target.style.transform = 'scale(1.02)'}
+                    onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+                    >
+                      <h3 style={{
+                        color: '#333',
+                        marginBottom: '10px',
+                        fontSize: '1.2em'
+                      }}>{deck.name}</h3>
+                      <div style={{
+                        display: 'flex',
+                        gap: '10px',
+                        justifyContent: 'flex-start'
+                      }}>
+                        <button 
+                          onClick={() => selectDeck(deck, 'edit')}
+                          style={{
+                            background: '#f0f0f0',
+                            color: '#333',
+                            padding: '8px 15px',
+                            borderRadius: '6px',
+                            border: 'none',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Edit
+                        </button>
+                        <button 
+                          onClick={() => selectDeck(deck, 'study')}
+                          style={{
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            color: 'white',
+                            padding: '8px 15px',
+                            borderRadius: '6px',
+                            border: 'none',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Study
+                        </button>
+                        <button 
+                          onClick={() => deleteDeck()}
+                          style={{
+                            background: '#ff6b6b',
+                            color: 'white',
+                            padding: '8px 15px',
+                            borderRadius: '6px',
+                            border: 'none',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p style={{
+                  color: '#666',
+                  fontSize: '1.1em'
+                }}>No decks yet. Create your first deck!</p>
+              )}
+            </div>
+          ) : (
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '20px',
+              alignItems: 'center'
+            }}>
+              <p style={{
+                color: '#666',
+                fontSize: '1.2em'
+              }}>Please login to continue</p>
+              <div style={{
+                display: 'flex',
+                gap: '15px'
+              }}>
+                <button 
+                  onClick={() => setLoginMode(true)}
+                  style={{
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    color: 'white',
+                    padding: '12px 25px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                  onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+                >
+                  Login
+                </button>
+                <button 
+                  onClick={() => setLoginMode(false)}
+                  style={{
+                    background: '#f0f0f0',
+                    color: '#333',
+                    padding: '12px 25px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                  onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+                >
+                  Sign Up
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     );
   }
