@@ -82,27 +82,14 @@ function App() {
     }
   }
 
-  async function createDeck() {
-    try {
-      const res = await fetch(`${URL}/decks`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ name: "Untitled", cards: [], isPublic: false }),
-      });
 
-      const result = await res.json();
-      if (res.ok) {
-        setSelectedDeck(result.deck);
-        setMode('edit');
-        fetchDecks();
-      } else {
-        alert(result.message);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      alert('Error creating deck');
-    }
+  function createDeck() {
+    setSelectedDeck({
+      name: 'Untitled',
+      cards: [],
+      isPublic: false,
+    });
+    setMode('edit');
   }
 
   async function fetchDecks() {
@@ -160,31 +147,55 @@ function App() {
 
   function deleteCard(index) {
     const updatedCards = [...selectedDeck.cards];
-    updatedCards.pop(index);
+    updatedCards.splice(index, 1); 
     setSelectedDeck({ ...selectedDeck, cards: updatedCards });
   }
 
   async function saveDeckChanges() {
-    const filteredCards = [...selectedDeck.cards].filter(
-        ({ front, back }) => front.trim() != "" || back.trim() != ""
-      );
+    const filteredCards = selectedDeck.cards.filter(
+      ({ front, back }) => front.trim() !== "" || back.trim() !== ""
+    );
       
-    try {
-      const res = await fetch(`${URL}/decks/${selectedDeck._id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          ...selectedDeck,
-          cards: filteredCards,
-          isPublic: selectedDeck.isPublic
-        }),
-      });
 
-      const result = await res.json();
-
+    if (!selectedDeck._id && filteredCards.length === 0) {
       setMode('home');
-      fetchDecks();
+      return;
+    }
+
+    const deckData = {
+      ...selectedDeck,
+      cards: filteredCards,
+      isPublic: selectedDeck.isPublic,
+    };
+
+    try {
+      let response;
+      if (selectedDeck._id) {
+
+        response = await fetch(`${URL}/decks/${selectedDeck._id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(deckData),
+        });
+      } else {
+
+        response = await fetch(`${URL}/decks`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(deckData),
+        });
+      }
+
+      const result = await response.json();
+      
+      if (response.ok) {
+        setMode('home');
+        fetchDecks();
+      } else {
+        alert(result.message || "An error occurred.")
+      }
     } catch (error) {
       console.error('Error:', error);
       alert('Error saving changes');
@@ -538,7 +549,8 @@ function App() {
                 fontSize: '16px'
               }}>Public</span>
             </div>
-
+          </div>
+        </div>
         {selectedDeck.cards.map((card, idx) => (
           <div key={idx} style={{ marginBottom: 10 }}>
             <input
@@ -557,7 +569,7 @@ function App() {
         <button onClick={addNewCard}>Add New Card</button>
         <br /><br />
         <button onClick={saveDeckChanges}>Save Changes</button>
-        <button onClick={deleteDeck} style={{ color: 'red' }}>Delete Deck</button>
+        {selectedDeck._id && <button onClick={deleteDeck} style={{ color: 'red' }}>Delete Deck</button>}
         <button onClick={() => setMode('home')}>Back</button>
       </div>
     );
