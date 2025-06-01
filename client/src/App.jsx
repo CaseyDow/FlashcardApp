@@ -215,70 +215,186 @@ function App() {
     console.log(result.decks)
     setPublicDecks(result.decks);
   }
-// function to handle CSV import
-async function handleCSVImport(event) {
-  const file = event.target.files[0];
-  if (!file) return;
 
-  const reader = new FileReader();
-  reader.onload = async (e) => {
-    const text = e.target.result;
-    const rows = text.split('\n').map(row => row.split(',').map(cell => cell.trim()));
-    
-    
-    const cards = rows.slice(1).map(row => ({
-      front: row[0] || '',
-      back: row[1] || ''
-    })).filter(card => card.front || card.back);
+  // function to handle CSV import
+  async function handleCSVImport(event) {
+    const file = event.target.files[0];
+    if (!file) return;
 
-    // new deck with these imported cards
-    try {
-      const res = await fetch(`${URL}/decks`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ 
-          name: file.name.replace('.csv', ''), 
-          cards: cards, 
-          isPublic: false 
-        }),
-      });
-
-      const result = await res.json();
-      if (res.ok) {
-        fetchDecks();
-        alert('CSV imported successfully!');
-      } else {
-        alert(result.message);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      alert('Error importing CSV');
+    // Check file size (limit to 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File is too large. Please upload a file smaller than 5MB.');
+      return;
     }
-  };
-  reader.readAsText(file);
-}
 
-// csv exporting
-function exportToCSV(deck) {
-  const headers = ['Front', 'Back'];
-  const rows = deck.cards.map(card => [card.front, card.back]);
-  const csvContent = [
-    headers.join(','),
-    ...rows.map(row => row.join(','))
-  ].join('\n');
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        let text = e.target.result;
+        
+        // Remove BOM if present
+        if (text.charCodeAt(0) === 0xFEFF) {
+          text = text.slice(1);
+        }
 
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  const url = window.URL.createObjectURL(blob);
-  link.setAttribute('href', url);
-  link.setAttribute('download', `${deck.name}.csv`);
-  link.style.visibility = 'hidden';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  window.URL.revokeObjectURL(url);
-}
+        // Normalize line endings
+        text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        
+        
+        const rows = [];
+        let currentRow = [];
+        let current = '';
+        let inQuotes = false;
+        let i = 0;
+        
+        while (i < text.length) {
+          const char = text[i];
+          const nextChar = text[i + 1];
+          
+          if (char === '"') {
+            if (inQuotes && nextChar === '"') {
+              // Handle escaped quotes (double quotes inside quoted field)
+              current += '"';
+              i += 2; 
+              continue;
+            } else {
+              // Toggle quote state
+              inQuotes = !inQuotes;
+              i++;
+              continue;
+            }
+          }
+          
+          if (char === ',' && !inQuotes) {
+            // Only split on commas outside of quotes
+            currentRow.push(current.trim());
+            current = '';
+            i++;
+            continue;
+          }
+          
+          if (char === '\n' && !inQuotes) {
+            
+            currentRow.push(current.trim());
+            rows.push(currentRow);
+            currentRow = [];
+            current = '';
+            i++;
+            continue;
+          }
+          
+          if (char === '\\') {
+            if (nextChar === 'n') {
+              // Handle \n as actual newline
+              current += '\n';
+              i += 2;
+              continue;
+            } else if (nextChar === '\\') {
+              // Handle escaped backslash
+              current += '\\';
+              i += 2;
+              continue;
+            } else if (nextChar === '"') {
+              // Handle escaped quote with backslash
+              current += '"';
+              i += 2;
+              continue;
+            }
+        
+            current += '\\';
+            i++;
+            continue;
+          }
+          
+          // Regular character
+          current += char;
+          i++;
+        }
+        
+        // Add the last field and row if there's any content
+        if (current.trim()) {
+          currentRow.push(current.trim());
+        }
+        if (currentRow.length > 0) {
+          rows.push(currentRow);
+        }
+
+        
+        const headers = rows[0];
+        if (headers.length < 2) {
+          alert('CSV must have at least two columns: Front and Back');
+          return;
+        }
+
+        // Skip header row and create cards
+        const cards = rows.slice(1)
+          .map(row => ({
+            front: row[0] || '',
+            back: row[1] || ''
+          }))
+          .filter(card => card.front.trim() || card.back.trim()); // Only keep cards with content
+
+        if (cards.length === 0) {
+          alert('No valid cards found in the CSV file.');
+          return;
+        }
+
+        try {
+          const res = await fetch(`${URL}/decks`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ 
+              name: file.name.replace('.csv', ''), 
+              cards: cards, 
+              isPublic: false 
+            }),
+          });
+
+          const result = await res.json();
+          if (res.ok) {
+            fetchDecks();
+            alert(`Successfully imported ${cards.length} cards!`);
+          } else {
+            alert(result.message || 'Error importing CSV');
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          alert('Error importing CSV. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error parsing CSV:', error);
+        alert('Error parsing CSV file. Please ensure it is properly formatted.');
+      }
+    };
+
+    reader.onerror = () => {
+      alert('Error reading file. Please try again.');
+    };
+
+    reader.readAsText(file);
+  }
+
+  // csv exporting
+  function exportToCSV(deck) {
+    const headers = ['Front', 'Back'];
+    const rows = deck.cards.map(card => [card.front, card.back]);
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = window.URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${deck.name}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  }
 
   useEffect(() => {
     checkLoginStatus();
@@ -319,6 +435,7 @@ function exportToCSV(deck) {
             width: '300px',
             height: '200px',
             border: 'solid 1px black',
+            whiteSpace: 'pre-wrap',
           }} onClick={() => setStudyFront(!studyFront)}>
           {
             selectedDeck.cards.length == 0
@@ -585,6 +702,7 @@ function exportToCSV(deck) {
         setMode('public');
         fetchPublicDecks();
       }}>Explore Public Decks</button>
+      
       <div style={{ marginTop: '20px' }}>
         <h3>Import CSV</h3>
         <input
