@@ -777,14 +777,6 @@ function App() {
           <button onClick={() => exportToCSV(deck)}>Export to CSV</button>
         </div>
       ))}
-<<<<<<< HEAD
-=======
-      <button onClick={createDeck}>Create New Deck</button>
-      <button onClick={() => {
-        setMode('public');
-        fetchPublicDecks();
-      }}>Explore Public Decks</button>
-      
       <div style={{ marginTop: '20px' }}>
         <h3>Import CSV</h3>
         <input
@@ -797,7 +789,6 @@ function App() {
           CSV should have two columns: Front and Back
         </p>
       </div>
->>>>>>> csv-import
     </div>
   );
 }
