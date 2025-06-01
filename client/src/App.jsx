@@ -577,6 +577,11 @@ function App() {
 
   return (
     <div style={{ padding: 50 }}>
+      <button onClick={createDeck}>Create New Deck</button>
+      <button onClick={() => {
+        setMode('public');
+        fetchPublicDecks();
+      }}>Explore Public Decks</button>
       <button onClick={deleteAccount}>Delete Account</button>
       <button onClick={logout}>Logout</button>
 
@@ -590,11 +595,6 @@ function App() {
           <button onClick={() => selectDeck(deck, 'study')}>Study</button>
         </div>
       ))}
-      <button onClick={createDeck}>Create New Deck</button>
-      <button onClick={() => {
-        setMode('public');
-        fetchPublicDecks();
-      }}>Explore Public Decks</button>
     </div>
   );
 }
