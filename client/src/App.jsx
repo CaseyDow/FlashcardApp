@@ -154,6 +154,7 @@ function App() {
   function selectDeck(deck, newMode) {
     setSelectedDeck({ ...deck, author: username });
     alert('Author set to ' + username)
+    setStudyIndex(0);
     setMode(newMode);
   }
 
@@ -170,6 +171,10 @@ function App() {
   }
 
   async function saveDeckChanges() {
+    const filteredCards = [...selectedDeck.cards].filter(
+        ({ front, back }) => front.trim() != "" || back.trim() != ""
+      );
+      
     try {
       const res = await fetch(`${URL}/decks/${selectedDeck._id}`, {
         method: 'PUT',
@@ -177,6 +182,7 @@ function App() {
         credentials: 'include',
         body: JSON.stringify({
           ...selectedDeck,
+          cards: filteredCards,
           isPublic: selectedDeck.isPublic,
           author: username
         }),
@@ -480,22 +486,79 @@ function App() {
 
   if (mode == 'edit' && selectedDeck) {
     return (
-      <div style={{ padding: 50 }}>
-        <h2>Editing Deck</h2>
-        <input
-          value={selectedDeck.name}
-          onChange={(e) => setSelectedDeck({ ...selectedDeck, name: e.target.value })}
-          placeholder="Deck Name"
-          style={{ marginBottom: 20, fontSize: '1.2em' }}
-        />
-        <label>
-          <input
-            type="checkbox"
-            checked={selectedDeck.isPublic}
-            onChange={(e) => setSelectedDeck({ ...selectedDeck, isPublic: e.target.checked })}
-          />
-          Public
-        </label>
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        padding: '20px',
+        overflow: 'auto'
+      }}>
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.95)',
+          padding: '40px',
+          borderRadius: '15px',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          width: '100%',
+          maxWidth: '800px',
+          textAlign: 'center'
+        }}>
+          <h1 style={{
+            color: '#333',
+            marginBottom: '30px',
+            fontSize: '2.5em',
+            fontWeight: '600'
+          }}>Editing Deck</h1>
+
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '20px',
+            width: '100%'
+          }}>
+            <input
+              value={selectedDeck.name}
+              onChange={(e) => setSelectedDeck({ ...selectedDeck, name: e.target.value })}
+              placeholder="Deck Name"
+              style={{
+                padding: '12px 15px',
+                borderRadius: '8px',
+                border: '1px solid #ddd',
+                fontSize: '16px',
+                transition: 'border-color 0.3s ease',
+                outline: 'none',
+                width: '100%'
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#667eea'}
+              onBlur={(e) => e.target.style.borderColor = '#ddd'}
+            />
+
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              marginBottom: '20px'
+            }}>
+              <input
+                type="checkbox"
+                checked={selectedDeck.isPublic}
+                onChange={(e) => setSelectedDeck({ ...selectedDeck, isPublic: e.target.checked })}
+                style={{
+                  width: '20px',
+                  height: '20px'
+                }}
+              />
+              <span style={{
+                color: '#333',
+                fontSize: '16px'
+              }}>Public</span>
+            </div>
 
         {selectedDeck.cards.map((card, idx) => (
           <div key={idx} style={{ marginBottom: 10 }}>
@@ -529,7 +592,7 @@ function App() {
       <hr />
 
       <h2>Decks</h2>
-      {decks.map((deck) => (
+      {decks.sort((a, b) => a.name.localeCompare(b.name)).map((deck) => (
         <div key={deck._id} style={{ border: '1px solid gray', padding: '10px' }}>
           <h4>{deck.name}</h4>
           <button onClick={() => selectDeck(deck, 'edit')}>Edit</button>
