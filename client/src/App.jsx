@@ -138,6 +138,7 @@ function App() {
   function selectDeck(deck, newMode) {
     setSelectedDeck({ ...deck });
     setStudyIndex(0);
+    setStudyFront(true); // Reset to front when selecting a new deck
     setMode(newMode);
   }
 
@@ -157,7 +158,7 @@ function App() {
     const filteredCards = selectedDeck.cards.filter(
       ({ front, back }) => front.trim() !== "" || back.trim() !== ""
     );
-     
+    
     if (!selectedDeck._id && filteredCards.length === 0) {
       setMode('home');
       return;
@@ -438,7 +439,7 @@ function App() {
    
     return () => window.removeEventListener('keydown', keyDown);
 
-  }, [mode]);
+  }, [mode, studyIndex, studyFront, selectedDeck]);
 
   if (mode == 'study' && selectedDeck) {
     return (
@@ -484,6 +485,22 @@ function App() {
         <div>
           <button onClick={() => setMode('home')}>Home</button>
         </div>
+      </div>
+    );
+  }
+
+  if (mode === 'public' && !loggedIn) {
+    return (
+      <div style={{ padding: 50 }}>
+        <button onClick={() => setMode('home')}>Back</button> 
+        <hr />
+        <h2>Public Decks</h2>
+        {publicDecks.length > 0 ? publicDecks.map((deck) => (
+          <div key={deck._id} style={{ border: '1px solid gray', padding: 10, marginBottom: '10px' }}>
+            <h4>{deck.name}</h4>
+            <button onClick={() => selectDeck(deck, 'study')}>Study</button>
+          </div>
+        )) : <p>No Public Decks Available</p>}
       </div>
     );
   }
@@ -732,15 +749,18 @@ function App() {
 
   return (
     <div style={{ padding: 50 }}>
-      <button onClick={() => setMode('home')}>Home</button>
-      <button onClick={() => {
-        setMode('public');
-        fetchPublicDecks();
-      }}>Explore Public Decks</button>
-      <button onClick={deleteAccount}>Delete Account</button>
-      <button onClick={logout}>Logout</button>
-
-      <hr />
+      {loggedIn && (
+        <>
+          <button onClick={() => setMode('home')}>Home</button>
+          <button onClick={() => {
+            setMode('public');
+            fetchPublicDecks();
+          }}>Explore Public Decks</button>
+          <button onClick={deleteAccount}>Delete Account</button>
+          <button onClick={logout}>Logout</button>
+          <hr />
+        </>
+      )}
 
       {mode === 'public' && (
         <div style={{ marginTop: '20px' }}>
@@ -761,10 +781,11 @@ function App() {
               }}>Copy to My Decks</button>}
             </div>
           )) : <p>No Public Decks Available</p>}
+          {!loggedIn && <button onClick={() => setMode('home')}>Back to Login</button>}
         </div>
       )}
       
-      {mode === 'home' && (
+      {mode === 'home' && loggedIn && (
         <>
           <h2>Decks</h2>
           {decks.sort((a, b) => a.name.localeCompare(b.name)).map((deck) => (
