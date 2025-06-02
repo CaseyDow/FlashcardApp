@@ -65,6 +65,7 @@ function App() {
       console.error('Error:', error);
       alert('Error');
     }
+    location.reload(true);
   };
 
   async function logout() {
@@ -147,7 +148,7 @@ function App() {
 
   function deleteCard(index) {
     const updatedCards = [...selectedDeck.cards];
-    updatedCards.splice(index, 1); 
+    updatedCards.splice(index, 1);
     setSelectedDeck({ ...selectedDeck, cards: updatedCards });
   }
 
@@ -155,8 +156,7 @@ function App() {
     const filteredCards = selectedDeck.cards.filter(
       ({ front, back }) => front.trim() !== "" || back.trim() !== ""
     );
-      
-
+     
     if (!selectedDeck._id && filteredCards.length === 0) {
       setMode('home');
       return;
@@ -171,7 +171,6 @@ function App() {
     try {
       let response;
       if (selectedDeck._id) {
-
         response = await fetch(`${URL}/decks/${selectedDeck._id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -179,7 +178,6 @@ function App() {
           body: JSON.stringify(deckData),
         });
       } else {
-
         response = await fetch(`${URL}/decks`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -189,7 +187,7 @@ function App() {
       }
 
       const result = await response.json();
-      
+     
       if (response.ok) {
         setMode('home');
         fetchDecks();
@@ -248,7 +246,7 @@ function App() {
     reader.onload = async (e) => {
       try {
         let text = e.target.result;
-        
+       
         // Remove BOM if present
         if (text.charCodeAt(0) === 0xFEFF) {
           text = text.slice(1);
@@ -256,23 +254,23 @@ function App() {
 
         // Normalize line endings
         text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-        
-        
+       
+       
         const rows = [];
         let currentRow = [];
         let current = '';
         let inQuotes = false;
         let i = 0;
-        
+       
         while (i < text.length) {
           const char = text[i];
           const nextChar = text[i + 1];
-          
+         
           if (char === '"') {
             if (inQuotes && nextChar === '"') {
               // Handle escaped quotes (double quotes inside quoted field)
               current += '"';
-              i += 2; 
+              i += 2;
               continue;
             } else {
               // Toggle quote state
@@ -281,7 +279,7 @@ function App() {
               continue;
             }
           }
-          
+         
           if (char === ',' && !inQuotes) {
             // Only split on commas outside of quotes
             currentRow.push(current.trim());
@@ -289,9 +287,9 @@ function App() {
             i++;
             continue;
           }
-          
+         
           if (char === '\n' && !inQuotes) {
-            
+           
             currentRow.push(current.trim());
             rows.push(currentRow);
             currentRow = [];
@@ -299,7 +297,7 @@ function App() {
             i++;
             continue;
           }
-          
+         
           if (char === '\\') {
             if (nextChar === 'n') {
               // Handle \n as actual newline
@@ -317,17 +315,17 @@ function App() {
               i += 2;
               continue;
             }
-        
+         
             current += '\\';
             i++;
             continue;
           }
-          
+         
           // Regular character
           current += char;
           i++;
         }
-        
+       
         // Add the last field and row if there's any content
         if (current.trim()) {
           currentRow.push(current.trim());
@@ -336,7 +334,7 @@ function App() {
           rows.push(currentRow);
         }
 
-        
+       
         const headers = rows[0];
         if (headers.length < 2) {
           alert('CSV must have at least two columns: Front and Back');
@@ -349,7 +347,7 @@ function App() {
             front: row[0] || '',
             back: row[1] || ''
           }))
-          .filter(card => card.front.trim() || card.back.trim()); // Only keep cards with content
+          .filter(card => card.front.trim() || card.back.trim());// Only keep cards with content
 
         if (cards.length === 0) {
           alert('No valid cards found in the CSV file.');
@@ -436,7 +434,7 @@ function App() {
       }
     };
     window.addEventListener('keydown', keyDown);
-    
+   
     return () => window.removeEventListener('keydown', keyDown);
 
   }, [mode]);
@@ -459,7 +457,7 @@ function App() {
               ? "Empty Deck"
               : (studyFront ? selectedDeck.cards[studyIndex].front : selectedDeck.cards[studyIndex].back)
           }
-          
+         
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', marginTop: '20px' }}>
@@ -485,31 +483,6 @@ function App() {
         <div>
           <button onClick={() => setMode('home')}>Home</button>
         </div>
-      </div>
-    );
-  }
-
-  if (mode == 'public') {
-    return (
-      <div style={{ padding: 50 }}>
-        <h2>Public Decks</h2>
-        {publicDecks.length > 0 ? publicDecks.map((deck) => (
-          <div key={deck._id} style={{ border: '1px solid gray', padding: 10 }}>
-            <h4>{deck.name}</h4>
-            <button onClick={() => selectDeck(deck, 'study')}>Study</button>
-            {loggedIn && <button onClick={async () => {
-              const res = await fetch(`${URL}/decks`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ name: deck.name, cards: deck.cards, isPublic: false }),
-              });
-              const result = await res.json();
-              fetchDecks();
-            }}>Copy to My Decks</button>}
-          </div>
-        )) : <p>No Decks Available</p>}
-        <button onClick={() => setMode('home')}>Back</button>
       </div>
     );
   }
@@ -545,7 +518,7 @@ function App() {
             fontSize: '2.5em',
             fontWeight: '600'
           }}>{loginMode ? 'Welcome Back' : 'Create Account'}</h1>
-          
+         
           <form onSubmit={handleAuthSubmit} style={{
             display: 'flex',
             flexDirection: 'column',
@@ -622,7 +595,7 @@ function App() {
             >
               {loginMode ? 'New here? Create an account' : 'Already have an account? Sign in'}
             </button>
-            
+           
             <button 
               onClick={() => {
                 setMode('public');
@@ -768,27 +741,53 @@ function App() {
 
       <hr />
 
-      <h2>Decks</h2>
-      {decks.sort((a, b) => a.name.localeCompare(b.name)).map((deck) => (
-        <div key={deck._id} style={{ border: '1px solid gray', padding: '10px' }}>
-          <h4>{deck.name}</h4>
-          <button onClick={() => selectDeck(deck, 'edit')}>Edit</button>
-          <button onClick={() => selectDeck(deck, 'study')}>Study</button>
-          <button onClick={() => exportToCSV(deck)}>Export to CSV</button>
+      {mode === 'public' && (
+        <div style={{ marginTop: '20px' }}>
+          <h2>Public Decks</h2>
+          {publicDecks.length > 0 ? publicDecks.map((deck) => (
+            <div key={deck._id} style={{ border: '1px solid gray', padding: 10, marginBottom: '10px' }}>
+              <h4>{deck.name}</h4>
+              <button onClick={() => selectDeck(deck, 'study')}>Study</button>
+              {loggedIn && <button onClick={async () => {
+                const res = await fetch(`${URL}/decks`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  credentials: 'include',
+                  body: JSON.stringify({ name: deck.name, cards: deck.cards, isPublic: false }),
+                });
+                const result = await res.json();
+                fetchDecks();
+              }}>Copy to My Decks</button>}
+            </div>
+          )) : <p>No Public Decks Available</p>}
         </div>
-      ))}
-      <div style={{ marginTop: '20px' }}>
-        <h3>Import CSV</h3>
-        <input
-          type="file"
-          accept=".csv"
-          onChange={handleCSVImport}
-          style={{ marginTop: '10px' }}
-        />
-        <p style={{ fontSize: '0.8em', color: '#666' }}>
-          CSV should have two columns: Front and Back
-        </p>
-      </div>
+      )}
+      
+      {mode === 'home' && (
+        <>
+          <h2>Decks</h2>
+          {decks.sort((a, b) => a.name.localeCompare(b.name)).map((deck) => (
+            <div key={deck._id} style={{ border: '1px solid gray', padding: '10px', marginBottom: '10px' }}>
+              <h4>{deck.name}</h4>
+              <button onClick={() => selectDeck(deck, 'edit')}>Edit</button>
+              <button onClick={() => selectDeck(deck, 'study')}>Study</button>
+              <button onClick={() => exportToCSV(deck)}>Export to CSV</button>
+            </div>
+          ))}
+          <div style={{ marginTop: '20px' }}>
+            <h3>Import CSV</h3>
+            <input
+              type="file"
+              accept=".csv"
+              onChange={handleCSVImport}
+              style={{ marginTop: '10px' }}
+            />
+            <p style={{ fontSize: '0.8em', color: '#666' }}>
+              CSV should have two columns: Front and Back
+            </p>
+          </div>
+        </>
+      )}
     </div>
   );
 }
