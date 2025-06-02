@@ -552,7 +552,23 @@ function App() {
     }
     );
     return (
-      <div style={{ padding: 50 }}>
+      <div style={{
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',      
+        display: 'flex',
+        position: 'relative',
+        flexDirection: 'column',
+        alignItems: 'center',
+        minHeight: '100vh'
+      }}>
+      <div style={{
+        background: 'rgba(255, 255, 255, 0.95)',
+        padding: '40px',
+        borderRadius: '15px',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+        width: '90%',
+        top: '10vh',
+        margin: '50px'
+      }}>
         <button onClick={() => setMode('home')}>Back</button> 
         <hr />
         <h2>Public Decks</h2>
@@ -580,16 +596,6 @@ function App() {
             <h4>{deck.name}</h4>
             <p>{deck.author}</p>
             <button onClick={() => selectDeck(deck, 'study')}>Study</button>
-            {loggedIn && <button onClick={async () => {
-              const res = await fetch(`${URL}/decks`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ name: deck.name, cards: deck.cards, isPublic: false , author: username}),
-              });
-              const result = await res.json();
-              fetchDecks();
-            }}>Copy to My Decks</button>}
           </div>
         )) : <p>No Public Decks Available</p>}
         <button onClick={() => {setMode('home')
@@ -597,6 +603,7 @@ function App() {
           setSearchByAuthor(false);
         }}>Back</button>
       </div>
+    </div>
     );
   }
 
@@ -792,7 +799,7 @@ function App() {
                 fontSize: '16px',
                 transition: 'border-color 0.3s ease',
                 outline: 'none',
-                width: '100%'
+                width: '100%',
               }}
               onFocus={(e) => e.target.style.borderColor = '#667eea'}
               onBlur={(e) => e.target.style.borderColor = '#ddd'}
@@ -825,6 +832,7 @@ function App() {
                 value={card.front}
                 onChange={(e) => handleCardChange(idx, 'front', e.target.value)}
                 placeholder="Front"
+                style={{margin: 5}}
               />
               <input
                 value={card.back}
@@ -914,7 +922,8 @@ function App() {
               <h4>{deck.name}</h4>
               <p>{deck.author}</p>
               <button onClick={() => selectDeck(deck, 'study')}>Study</button>
-              {loggedIn && <button onClick={async () => {
+              <button onClick={async () => {
+                alert(`Added ${deck.name} to your decks.`);
                 const res = await fetch(`${URL}/decks`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
@@ -923,7 +932,7 @@ function App() {
                 });
                 const result = await res.json();
                 fetchDecks();
-              }}>Copy to My Decks</button>}
+              }}>Copy to My Decks</button>
             </div>
           )) : <p>No Public Decks Available</p>}
           {!loggedIn && <button onClick={() => setMode('home')}>Back to Login</button>}
