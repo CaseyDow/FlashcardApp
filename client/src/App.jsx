@@ -142,7 +142,6 @@ function App() {
 
   function selectDeck(deck, newMode) {
     setSelectedDeck({ ...deck, author: username });
-    alert('Author set to ' + username)
     setStudyIndex(0);
     setStudyFront(true); // Reset to front when selecting a new deck
     setMode(newMode);
@@ -450,16 +449,38 @@ function App() {
 
   if (mode == 'study' && selectedDeck) {
     return (
-      <div style={{ padding: 50 }}>
+      <div style={{
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',      
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100vh',
+      }}>
+      <div style={{
+        background: 'rgba(255, 255, 255, 0.95)',
+        padding: '40px',
+        borderRadius: '15px',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+        width: '90%',
+        minHeight: '80vh',
+        top: '10vh',
+        margin: '50px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
         <h2>{selectedDeck.name}</h2>
 
         <div
           style={{
             padding: '50px',
-            width: '300px',
-            height: '200px',
+            width: '80%',
+            minHeight: '40vh',
             border: 'solid 1px black',
             whiteSpace: 'pre-wrap',
+            overflowWrap: 'break-word'
           }} onClick={() => setStudyFront(!studyFront)}>
           {
             selectedDeck.cards.length == 0
@@ -493,6 +514,7 @@ function App() {
           <button onClick={() => setMode('home')}>Home</button>
         </div>
       </div>
+    </div>
     );
   }
 
@@ -777,33 +799,51 @@ function App() {
               }}>Public</span>
             </div>
           </div>
+          {selectedDeck.cards.map((card, idx) => (
+            <div key={idx} style={{ marginBottom: 10 }}>
+              <input
+                value={card.front}
+                onChange={(e) => handleCardChange(idx, 'front', e.target.value)}
+                placeholder="Front"
+              />
+              <input
+                value={card.back}
+                onChange={(e) => handleCardChange(idx, 'back', e.target.value)}
+                placeholder="Back"
+              />
+              <button onClick={() => deleteCard(idx)}>Delete Card</button>
+            </div>
+          ))}
+          <button onClick={addNewCard}>Add New Card</button>
         </div>
-        {selectedDeck.cards.map((card, idx) => (
-          <div key={idx} style={{ marginBottom: 10 }}>
-            <input
-              value={card.front}
-              onChange={(e) => handleCardChange(idx, 'front', e.target.value)}
-              placeholder="Front"
-            />
-            <input
-              value={card.back}
-              onChange={(e) => handleCardChange(idx, 'back', e.target.value)}
-              placeholder="Back"
-            />
-            <button onClick={() => deleteCard(idx)}>Delete Card</button>
-          </div>
-        ))}
-        <button onClick={addNewCard}>Add New Card</button>
-        <br /><br />
-        <button onClick={saveDeckChanges}>Save Changes</button>
-        {selectedDeck._id && <button onClick={deleteDeck} style={{ color: 'red' }}>Delete Deck</button>}
-        <button onClick={() => setMode('home')}>Back</button>
+        <br/>
+        <div style={{flex: 1}}>
+          <button onClick={saveDeckChanges}>Save Changes</button>
+          {selectedDeck._id && <button onClick={deleteDeck} style={{ color: 'red' }}>Delete Deck</button>}
+          <button onClick={() => setMode('home')}>Back</button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: 50 }}>
+    <div style={{
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',      
+      display: 'flex',
+      position: 'relative',
+      flexDirection: 'column',
+      alignItems: 'center',
+      minHeight: '100vh'
+    }}>
+    <div style={{
+      background: 'rgba(255, 255, 255, 0.95)',
+      padding: '40px',
+      borderRadius: '15px',
+      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+      width: '90%',
+      top: '10vh',
+      margin: '50px'
+    }}>
       {loggedIn && (
         <>
           <button onClick={() => setMode('home')}>Home</button>
@@ -897,6 +937,7 @@ function App() {
           </div>
         </>
       )}
+    </div>
     </div>
   );
 }
