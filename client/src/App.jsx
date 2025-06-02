@@ -81,6 +81,7 @@ function App() {
       console.error('Error:', error);
       alert('Error');
     }
+    location.reload(true);
   }
 
 
@@ -359,10 +360,10 @@ function App() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
-            body: JSON.stringify({ 
-              name: file.name.replace('.csv', ''), 
-              cards: cards, 
-              isPublic: false 
+            body: JSON.stringify({
+              name: file.name.replace('.csv', ''),
+              cards: cards,
+              isPublic: false
             }),
           });
 
@@ -525,9 +526,9 @@ function App() {
             gap: '20px',
             marginBottom: '25px'
           }}>
-            <input 
-              placeholder="Username" 
-              value={username} 
+            <input
+              placeholder="Username"
+              value={username}
               onChange={(e) => setUsername(e.target.value)}
               style={{
                 padding: '12px 15px',
@@ -540,10 +541,10 @@ function App() {
               onFocus={(e) => e.target.style.borderColor = '#667eea'}
               onBlur={(e) => e.target.style.borderColor = '#ddd'}
             />
-            <input 
-              placeholder="Password" 
-              type="password" 
-              value={password} 
+            <input
+              placeholder="Password"
+              type="password"
+              value={password}
               onChange={(e) => setPassword(e.target.value)}
               style={{
                 padding: '12px 15px',
@@ -556,7 +557,7 @@ function App() {
               onFocus={(e) => e.target.style.borderColor = '#667eea'}
               onBlur={(e) => e.target.style.borderColor = '#ddd'}
             />
-            <button 
+            <button
               type="submit"
               style={{
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -582,7 +583,7 @@ function App() {
             flexDirection: 'column',
             gap: '15px'
           }}>
-            <button 
+            <button
               onClick={() => setLoginMode(!loginMode)}
               style={{
                 background: 'transparent',
@@ -595,8 +596,8 @@ function App() {
             >
               {loginMode ? 'New here? Create an account' : 'Already have an account? Sign in'}
             </button>
-           
-            <button 
+
+            <button
               onClick={() => {
                 setMode('public');
                 fetchPublicDecks();
@@ -731,7 +732,7 @@ function App() {
 
   return (
     <div style={{ padding: 50 }}>
-      <button onClick={createDeck}>Create New Deck</button>
+      <button onClick={() => setMode('home')}>Home</button>
       <button onClick={() => {
         setMode('public');
         fetchPublicDecks();
@@ -774,6 +775,7 @@ function App() {
               <button onClick={() => exportToCSV(deck)}>Export to CSV</button>
             </div>
           ))}
+          <button onClick={createDeck}>Create New Deck</button>
           <div style={{ marginTop: '20px' }}>
             <h3>Import CSV</h3>
             <input
