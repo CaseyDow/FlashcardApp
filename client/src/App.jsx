@@ -398,10 +398,27 @@ function App() {
     reader.readAsText(file);
   }
 
-  // csv exporting
   function exportToCSV(deck) {
     const headers = ['Front', 'Back'];
-    const rows = deck.cards.map(card => [card.front, card.back]);
+
+    // Helper function to escape CSV fields
+    const escapeCSV = (field) => {
+      if (field == null) return '';
+      const stringField = String(field);
+      
+      if (stringField.includes(',') || stringField.includes('"') || stringField.includes('\n')) {
+       
+        return '"' + stringField.replace(/"/g, '""') + '"';
+      }
+      
+      return stringField;
+    };
+
+    const rows = deck.cards.map(card => [
+      escapeCSV(card.front),
+      escapeCSV(card.back)
+    ]);
+
     const csvContent = [
       headers.join(','),
       ...rows.map(row => row.join(','))
@@ -418,6 +435,7 @@ function App() {
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
   }
+
 
   useEffect(() => {
     checkLoginStatus();
