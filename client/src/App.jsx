@@ -30,6 +30,7 @@ function App() {
 
   // for search
   const [publicSearchTerm, setPublicSearchTerm] = useState('');
+  const [searchByAuthor, setSearchByAuthor] = useState(false);
 
   const URL = "http://localhost:5050/api";
 
@@ -171,6 +172,7 @@ function App() {
       ...selectedDeck,
       cards: filteredCards,
       isPublic: selectedDeck.isPublic,
+      author: selectedDeck.author
     };
 
     try {
@@ -315,30 +317,50 @@ function App() {
 
   if (mode == 'public') {
     // Filter public decks based on the search term
-    const filteredPublicDecks = publicDecks.filter(deck =>
-      deck.name.toLowerCase().includes(publicSearchTerm.toLowerCase())
+    const filteredPublicDecks = publicDecks.filter(deck => {
+      const term = publicSearchTerm.toLowerCase();
+      if (searchByAuthor) {
+        // Ensure deck.author exists and is searchable (assuming author is a string or object with username)
+        const authorName = typeof deck.author === 'object' && deck.author !== null ? String(deck.author.username || '').toLowerCase() : String(deck.author || '').toLowerCase();
+        return authorName.includes(term);
+      } else {
+        return deck.name.toLowerCase().includes(term);
+      }
+    }
     );
     return (
       <div style={{ padding: 50 }}>
         <h2>Public Decks</h2>
-        <input
-          type="text"
-          placeholder="Search by deck name..."
-          value={publicSearchTerm}
-          onChange={(e) => setPublicSearchTerm(e.target.value)}
-          style={{ marginBottom: '20px', padding: '10px', width: 'calc(100% - 22px)' }}
-        />
+        <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <input
+            type="text"
+            placeholder={searchByAuthor ? "Search by author..." : "Search by deck name..."}
+            value={publicSearchTerm}
+            onChange={(e) => setPublicSearchTerm(e.target.value)}
+            style={{ padding: '10px', flexGrow: 1 }} // flexGrow to take available space
+          />
+          <label style={{ display: 'flex', alignItems: 'center' }}>
+            <input
+              type="checkbox"
+              checked={searchByAuthor}
+              onChange={(e) => setSearchByAuthor(e.target.checked)}
+              style={{ marginRight: '5px' }}
+            />
+            Search by Author
+          </label>
+        </div>
 
         {filteredPublicDecks.length > 0 ? filteredPublicDecks.map((deck) => (
           <div key={deck._id} style={{ border: '1px solid gray', padding: 10 }}>
             <h4>{deck.name}</h4>
+            <p>{deck.author}</p>
             <button onClick={() => selectDeck(deck, 'study')}>Study</button>
             {loggedIn && <button onClick={async () => {
               const res = await fetch(`${URL}/decks`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({ name: deck.name, cards: deck.cards, isPublic: false }),
+                body: JSON.stringify({ name: deck.name, cards: deck.cards, isPublic: false , author: username}),
               });
               const result = await res.json();
               fetchDecks();
@@ -347,6 +369,7 @@ function App() {
         )) : <p>No Decks Available</p>}
         <button onClick={() => {setMode('home')
           setPublicSearchTerm('');
+          setSearchByAuthor(false);
         }}>Back</button>
       </div>
     );
@@ -524,7 +547,9 @@ function App() {
             fontSize: '2.5em',
             fontWeight: '600'
           }}>Editing Deck</h1>
-
+            <div>
+              <p>by <strong>{selectedDeck.author}</strong></p>
+            </div>
           <div style={{
             display: 'flex',
             flexDirection: 'column',
@@ -605,6 +630,7 @@ function App() {
       {decks.sort((a, b) => a.name.localeCompare(b.name)).map((deck) => (
         <div key={deck._id} style={{ border: '1px solid gray', padding: '10px' }}>
           <h4>{deck.name}</h4>
+          <p>{deck.author}</p>
           <button onClick={() => selectDeck(deck, 'edit')}>Edit</button>
           <button onClick={() => selectDeck(deck, 'study')}>Study</button>
         </div>
