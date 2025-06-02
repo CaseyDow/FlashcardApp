@@ -29,8 +29,21 @@ function authToken(id) {
   return jwt.sign({ id: id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 }
 
-app.get('/api/user/check', authenticate, (req, res) => {
-  res.json({ loggedIn: true });
+app.get('/api/user/check', authenticate, async (req, res) => {
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({
+      loggedIn: true,
+      username: user.username
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
 app.post('/api/user/signup', async (req, res) => {

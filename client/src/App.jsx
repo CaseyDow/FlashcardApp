@@ -121,8 +121,10 @@ function App() {
         method: 'GET',
         credentials: 'include',
       });
+      const result = await res.json();
 
-      if (res.ok) {
+      if (result.loggedIn) {
+        setUsername(result.username);
         setLoggedIn(true);
         fetchDecks();
       } else {
