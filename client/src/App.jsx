@@ -142,7 +142,7 @@ function App() {
 
   function selectDeck(deck, newMode) {
     setSelectedDeck({ ...deck, author: username });
-    
+    alert('Author set to ' + username);
     setStudyIndex(0);
     setStudyFront(true); // Reset to front when selecting a new deck
     setMode(newMode);
