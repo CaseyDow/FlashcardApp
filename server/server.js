@@ -122,7 +122,7 @@ app.post('/api/user/logout', (req, res) => {
 });
 
 app.post('/api/decks', authenticate, async (req, res) => {
-  const { name, cards } = req.body;
+  const { name, cards} = req.body;
 
   if (name == null || name == '' || !Array.isArray(cards)) {
     return res.status(400).json({ message: 'Invalid deck' });
@@ -154,14 +154,14 @@ app.get('/api/decks', authenticate, async (req, res) => {
 
 app.put('/api/decks/:id', authenticate, async (req, res) => {
   const { id } = req.params;
-  const { name, cards } = req.body;
+  const { name, cards, isPublic: isPublicFromRequest} = req.body;
 
   try {
     const user = await User.findById(req.userId);
     if (!user.decks.includes(req.params.id)) {
       return res.status(403).json({ message: 'Not authorized to edit this deck' });
     }
-
+    // console.log(`Authenticated user: ${user.username} (ID: ${req.userId})`);
     const deck = await Deck.findById(id);
 
     if (!deck) {
@@ -170,7 +170,8 @@ app.put('/api/decks/:id', authenticate, async (req, res) => {
 
     deck.name = name;
     deck.cards = cards;
-
+    deck.author = user.username;
+    deck.isPublic = isPublicFromRequest;
     await deck.save();
 
     res.json({ message: 'Deck updated successfully!' });
