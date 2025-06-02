@@ -69,6 +69,7 @@ function App() {
       console.error('Error:', error);
       alert('Error');
     }
+    location.reload(true);
   };
 
   async function logout() {
@@ -84,6 +85,7 @@ function App() {
       console.error('Error:', error);
       alert('Error');
     }
+    location.reload(true);
   }
 
 
@@ -142,6 +144,7 @@ function App() {
     setSelectedDeck({ ...deck, author: username });
     alert('Author set to ' + username)
     setStudyIndex(0);
+    setStudyFront(true); // Reset to front when selecting a new deck
     setMode(newMode);
   }
 
@@ -153,7 +156,7 @@ function App() {
 
   function deleteCard(index) {
     const updatedCards = [...selectedDeck.cards];
-    updatedCards.splice(index, 1); 
+    updatedCards.splice(index, 1);
     setSelectedDeck({ ...selectedDeck, cards: updatedCards });
   }
 
@@ -161,8 +164,7 @@ function App() {
     const filteredCards = selectedDeck.cards.filter(
       ({ front, back }) => front.trim() !== "" || back.trim() !== ""
     );
-      
-
+    
     if (!selectedDeck._id && filteredCards.length === 0) {
       setMode('home');
       return;
@@ -178,7 +180,6 @@ function App() {
     try {
       let response;
       if (selectedDeck._id) {
-
         response = await fetch(`${URL}/decks/${selectedDeck._id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -186,7 +187,6 @@ function App() {
           body: JSON.stringify(deckData),
         });
       } else {
-
         response = await fetch(`${URL}/decks`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -196,7 +196,7 @@ function App() {
       }
 
       const result = await response.json();
-      
+     
       if (response.ok) {
         setMode('home');
         fetchDecks();
@@ -240,6 +240,186 @@ function App() {
     setPublicDecks(result.decks);
   }
 
+  // function to handle CSV import
+  async function handleCSVImport(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Check file size (limit to 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File is too large. Please upload a file smaller than 5MB.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        let text = e.target.result;
+       
+        // Remove BOM if present
+        if (text.charCodeAt(0) === 0xFEFF) {
+          text = text.slice(1);
+        }
+
+        // Normalize line endings
+        text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+       
+       
+        const rows = [];
+        let currentRow = [];
+        let current = '';
+        let inQuotes = false;
+        let i = 0;
+       
+        while (i < text.length) {
+          const char = text[i];
+          const nextChar = text[i + 1];
+         
+          if (char === '"') {
+            if (inQuotes && nextChar === '"') {
+              // Handle escaped quotes (double quotes inside quoted field)
+              current += '"';
+              i += 2;
+              continue;
+            } else {
+              // Toggle quote state
+              inQuotes = !inQuotes;
+              i++;
+              continue;
+            }
+          }
+         
+          if (char === ',' && !inQuotes) {
+            // Only split on commas outside of quotes
+            currentRow.push(current.trim());
+            current = '';
+            i++;
+            continue;
+          }
+         
+          if (char === '\n' && !inQuotes) {
+           
+            currentRow.push(current.trim());
+            rows.push(currentRow);
+            currentRow = [];
+            current = '';
+            i++;
+            continue;
+          }
+         
+          if (char === '\\') {
+            if (nextChar === 'n') {
+              // Handle \n as actual newline
+              current += '\n';
+              i += 2;
+              continue;
+            } else if (nextChar === '\\') {
+              // Handle escaped backslash
+              current += '\\';
+              i += 2;
+              continue;
+            } else if (nextChar === '"') {
+              // Handle escaped quote with backslash
+              current += '"';
+              i += 2;
+              continue;
+            }
+         
+            current += '\\';
+            i++;
+            continue;
+          }
+         
+          // Regular character
+          current += char;
+          i++;
+        }
+       
+        // Add the last field and row if there's any content
+        if (current.trim()) {
+          currentRow.push(current.trim());
+        }
+        if (currentRow.length > 0) {
+          rows.push(currentRow);
+        }
+
+       
+        const headers = rows[0];
+        if (headers.length < 2) {
+          alert('CSV must have at least two columns: Front and Back');
+          return;
+        }
+
+        // Skip header row and create cards
+        const cards = rows.slice(1)
+          .map(row => ({
+            front: row[0] || '',
+            back: row[1] || ''
+          }))
+          .filter(card => card.front.trim() || card.back.trim());// Only keep cards with content
+
+        if (cards.length === 0) {
+          alert('No valid cards found in the CSV file.');
+          return;
+        }
+
+        try {
+          const res = await fetch(`${URL}/decks`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              name: file.name.replace('.csv', ''),
+              cards: cards,
+              isPublic: false
+            }),
+          });
+
+          const result = await res.json();
+          if (res.ok) {
+            fetchDecks();
+            alert(`Successfully imported ${cards.length} cards!`);
+          } else {
+            alert(result.message || 'Error importing CSV');
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          alert('Error importing CSV. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error parsing CSV:', error);
+        alert('Error parsing CSV file. Please ensure it is properly formatted.');
+      }
+    };
+
+    reader.onerror = () => {
+      alert('Error reading file. Please try again.');
+    };
+
+    reader.readAsText(file);
+  }
+
+  // csv exporting
+  function exportToCSV(deck) {
+    const headers = ['Front', 'Back'];
+    const rows = deck.cards.map(card => [card.front, card.back]);
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = window.URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${deck.name}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  }
+
   useEffect(() => {
     checkLoginStatus();
   }, []);
@@ -263,10 +443,10 @@ function App() {
       }
     };
     window.addEventListener('keydown', keyDown);
-    
+   
     return () => window.removeEventListener('keydown', keyDown);
 
-  }, [mode]);
+  }, [mode, studyIndex, studyFront, selectedDeck]);
 
   if (mode == 'study' && selectedDeck) {
     return (
@@ -279,13 +459,14 @@ function App() {
             width: '300px',
             height: '200px',
             border: 'solid 1px black',
+            whiteSpace: 'pre-wrap',
           }} onClick={() => setStudyFront(!studyFront)}>
           {
             selectedDeck.cards.length == 0
               ? "Empty Deck"
               : (studyFront ? selectedDeck.cards[studyIndex].front : selectedDeck.cards[studyIndex].back)
           }
-          
+         
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', marginTop: '20px' }}>
@@ -315,7 +496,7 @@ function App() {
     );
   }
 
-  if (mode == 'public') {
+  if (mode === 'public' && !loggedIn) {
     // Filter public decks based on the search term
     const filteredPublicDecks = publicDecks.filter(deck => {
       const term = publicSearchTerm.toLowerCase();
@@ -330,6 +511,8 @@ function App() {
     );
     return (
       <div style={{ padding: 50 }}>
+        <button onClick={() => setMode('home')}>Back</button> 
+        <hr />
         <h2>Public Decks</h2>
         <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
           <input
@@ -351,7 +534,7 @@ function App() {
         </div>
 
         {filteredPublicDecks.length > 0 ? filteredPublicDecks.map((deck) => (
-          <div key={deck._id} style={{ border: '1px solid gray', padding: 10 }}>
+          <div key={deck._id} style={{ border: '1px solid gray', padding: 10, marginBottom: '10px' }}>
             <h4>{deck.name}</h4>
             <p>{deck.author}</p>
             <button onClick={() => selectDeck(deck, 'study')}>Study</button>
@@ -366,7 +549,7 @@ function App() {
               fetchDecks();
             }}>Copy to My Decks</button>}
           </div>
-        )) : <p>No Decks Available</p>}
+        )) : <p>No Public Decks Available</p>}
         <button onClick={() => {setMode('home')
           setPublicSearchTerm('');
           setSearchByAuthor(false);
@@ -406,16 +589,16 @@ function App() {
             fontSize: '2.5em',
             fontWeight: '600'
           }}>{loginMode ? 'Welcome Back' : 'Create Account'}</h1>
-          
+         
           <form onSubmit={handleAuthSubmit} style={{
             display: 'flex',
             flexDirection: 'column',
             gap: '20px',
             marginBottom: '25px'
           }}>
-            <input 
-              placeholder="Username" 
-              value={username} 
+            <input
+              placeholder="Username"
+              value={username}
               onChange={(e) => setUsername(e.target.value)}
               style={{
                 padding: '12px 15px',
@@ -428,10 +611,10 @@ function App() {
               onFocus={(e) => e.target.style.borderColor = '#667eea'}
               onBlur={(e) => e.target.style.borderColor = '#ddd'}
             />
-            <input 
-              placeholder="Password" 
-              type="password" 
-              value={password} 
+            <input
+              placeholder="Password"
+              type="password"
+              value={password}
               onChange={(e) => setPassword(e.target.value)}
               style={{
                 padding: '12px 15px',
@@ -444,7 +627,7 @@ function App() {
               onFocus={(e) => e.target.style.borderColor = '#667eea'}
               onBlur={(e) => e.target.style.borderColor = '#ddd'}
             />
-            <button 
+            <button
               type="submit"
               style={{
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -470,7 +653,7 @@ function App() {
             flexDirection: 'column',
             gap: '15px'
           }}>
-            <button 
+            <button
               onClick={() => setLoginMode(!loginMode)}
               style={{
                 background: 'transparent',
@@ -483,8 +666,8 @@ function App() {
             >
               {loginMode ? 'New here? Create an account' : 'Already have an account? Sign in'}
             </button>
-            
-            <button 
+
+            <button
               onClick={() => {
                 setMode('public');
                 fetchPublicDecks();
@@ -621,25 +804,99 @@ function App() {
 
   return (
     <div style={{ padding: 50 }}>
-      <button onClick={deleteAccount}>Delete Account</button>
-      <button onClick={logout}>Logout</button>
+      {loggedIn && (
+        <>
+          <button onClick={() => setMode('home')}>Home</button>
+          <button onClick={() => {
+            setMode('public');
+            fetchPublicDecks();
+          }}>Explore Public Decks</button>
+          <button onClick={deleteAccount}>Delete Account</button>
+          <button onClick={logout}>Logout</button>
+          <hr />
+        </>
+      )}
 
-      <hr />
-
-      <h2>Decks</h2>
-      {decks.sort((a, b) => a.name.localeCompare(b.name)).map((deck) => (
-        <div key={deck._id} style={{ border: '1px solid gray', padding: '10px' }}>
-          <h4>{deck.name}</h4>
-          <p>{deck.author}</p>
-          <button onClick={() => selectDeck(deck, 'edit')}>Edit</button>
-          <button onClick={() => selectDeck(deck, 'study')}>Study</button>
+      {mode === 'public' && ( () => {
+        const filteredPublicDecks = publicDecks.filter(deck => {
+        const term = publicSearchTerm.toLowerCase();
+        if (searchByAuthor) {
+          // Ensure deck.author exists and is searchable (assuming author is a string or object with username)
+          const authorName = typeof deck.author === 'object' && deck.author !== null ? String(deck.author.username || '').toLowerCase() : String(deck.author || '').toLowerCase();
+          return authorName.includes(term);
+        } else {
+          return deck.name.toLowerCase().includes(term);
+        }
+      });
+        return (
+        <div style={{ marginTop: '20px' }}>
+          <h2>Public Decks</h2>
+          <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <input
+              type="text"
+              placeholder={searchByAuthor ? "Search by author..." : "Search by deck name..."}
+              value={publicSearchTerm}
+              onChange={(e) => setPublicSearchTerm(e.target.value)}
+              style={{ padding: '10px', flexGrow: 1 }} // flexGrow to take available space
+            />
+            <label style={{ display: 'flex', alignItems: 'center' }}>
+              <input
+                type="checkbox"
+                checked={searchByAuthor}
+                onChange={(e) => setSearchByAuthor(e.target.checked)}
+                style={{ marginRight: '5px' }}
+              />
+              Search by Author
+            </label>
+          </div>
+          {filteredPublicDecks.length > 0 ? filteredPublicDecks.map((deck) => (
+            <div key={deck._id} style={{ border: '1px solid gray', padding: 10, marginBottom: '10px' }}>
+              <h4>{deck.name}</h4>
+              <p>{deck.author}</p>
+              <button onClick={() => selectDeck(deck, 'study')}>Study</button>
+              {loggedIn && <button onClick={async () => {
+                const res = await fetch(`${URL}/decks`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  credentials: 'include',
+                  body: JSON.stringify({ name: deck.name, cards: deck.cards, isPublic: false }),
+                });
+                const result = await res.json();
+                fetchDecks();
+              }}>Copy to My Decks</button>}
+            </div>
+          )) : <p>No Public Decks Available</p>}
+          {!loggedIn && <button onClick={() => setMode('home')}>Back to Login</button>}
         </div>
-      ))}
-      <button onClick={createDeck}>Create New Deck</button>
-      <button onClick={() => {
-        setMode('public');
-        fetchPublicDecks();
-      }}>Explore Public Decks</button>
+      );})()}
+      
+      {mode === 'home' && loggedIn && (
+        <>
+          <h2>Decks</h2>
+          {decks.sort((a, b) => a.name.localeCompare(b.name)).map((deck) => (
+            <div key={deck._id} style={{ border: '1px solid gray', padding: '10px', marginBottom: '10px' }}>
+              <h4>{deck.name}</h4>
+              <p>{deck.author}</p>
+          <button onClick={() => selectDeck(deck, 'edit')}>Edit</button>
+              <button onClick={() => selectDeck(deck, 'study')}>Study</button>
+              <button onClick={() => exportToCSV(deck)}>Export to CSV</button>
+            </div>
+          ))}
+          <button onClick={createDeck}>Create New Deck</button>
+          <div style={{ marginTop: '20px' }}>
+            <h3>Import CSV</h3>
+            <input
+              type="file"
+              accept=".csv"
+              onChange={handleCSVImport}
+              style={{ marginTop: '10px' }}
+            />
+            <p style={{ fontSize: '0.8em', color: '#666' }}>
+              CSV should have two columns: Front and Back
+            </p>
+          </div>
+        </>
+      )}
     </div>
   );
 }
