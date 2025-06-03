@@ -26,7 +26,7 @@ function App() {
   const [studyIndex, setStudyIndex] = useState(0);
   const [studyFront, setStudyFront] = useState(true);
 
-  const [publicDecks, setPublicDecks] = useState([])
+  const [publicDecks, setPublicDecks] = useState([]);
 
   // for search
   const [publicSearchTerm, setPublicSearchTerm] = useState('');
@@ -146,7 +146,7 @@ function App() {
   }
 
   function selectDeck(deck, newMode) {
-    setSelectedDeck({ ...deck, author: username });
+    setSelectedDeck(JSON.parse(JSON.stringify({...deck, author: username})));
     setStudyIndex(0);
     setStudyFront(true); // Reset to front when selecting a new deck
     setMode(newMode);
