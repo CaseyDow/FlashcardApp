@@ -46,6 +46,9 @@ function App() {
       });
 
       const result = await res.json();
+      if (res.status != 200) {
+        alert(result.message);
+      }
       checkLoginStatus();
     } catch (error) {
       console.error('Error:', error);
