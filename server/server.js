@@ -135,7 +135,7 @@ app.post('/api/user/logout', (req, res) => {
 });
 
 app.post('/api/decks', authenticate, async (req, res) => {
-  const { name, cards} = req.body;
+  const { name, cards, isPublic: isPublicFromRequest} = req.body;
 
   if (name == null || name == '' || !Array.isArray(cards)) {
     return res.status(400).json({ message: 'Invalid deck' });
@@ -144,7 +144,7 @@ app.post('/api/decks', authenticate, async (req, res) => {
   try {
     // console.log('user id: ', req.userId);
     const user = await User.findById(req.userId)
-    const deck = await Deck.create({ name: name, cards: cards, author: user.username });
+    const deck = await Deck.create({ name: name, cards: cards, isPublic: isPublicFromRequest, author: user.username });
     await User.findByIdAndUpdate(req.userId, {
       $push: { decks: deck._id }
     });
