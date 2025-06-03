@@ -491,7 +491,7 @@ function App() {
         alignItems: 'center',
         justifyContent: 'center',
       }}>
-        <h2>{selectedDeck.name}</h2>
+        <h2 style={{ color: '#333' }}>{selectedDeck.name}</h2>
 
         <div
           style={{
@@ -500,7 +500,8 @@ function App() {
             minHeight: '40vh',
             border: 'solid 1px black',
             whiteSpace: 'pre-wrap',
-            overflowWrap: 'break-word'
+            overflowWrap: 'break-word',
+            color: '#333'
           }} onClick={() => setStudyFront(!studyFront)}>
           {
             selectedDeck.cards.length == 0
@@ -519,7 +520,7 @@ function App() {
             ←
           </button>
 
-          <span>{studyIndex + 1} / {selectedDeck.cards.length}</span>
+          <span style={{ color: '#333' }}>{studyIndex + 1} / {selectedDeck.cards.length}</span>
 
           <button
             onClick={() => {
@@ -571,7 +572,7 @@ function App() {
       }}>
         <button onClick={() => setMode('home')}>Back</button> 
         <hr />
-        <h2>Public Decks</h2>
+        <h2 style={{ color: '#333' }}>Public Decks</h2>
         <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
           <input
             type="text"
@@ -593,8 +594,8 @@ function App() {
 
         {filteredPublicDecks.length > 0 ? filteredPublicDecks.map((deck) => (
           <div key={deck._id} style={{ border: '1px solid gray', padding: 10, marginBottom: '10px' }}>
-            <h4>{deck.name}</h4>
-            <p>{deck.author}</p>
+            <h4 style={{ color: '#333' }}>{deck.name}</h4>
+            <p style={{ color: '#333' }}>{deck.author}</p>
             <button onClick={() => selectDeck(deck, 'study')}>Study</button>
           </div>
         )) : <p>No Public Decks Available</p>}
@@ -898,7 +899,7 @@ function App() {
       });
         return (
         <div style={{ marginTop: '20px' }}>
-          <h2>Public Decks</h2>
+          <h2 style={{ color: '#333' }}>Public Decks</h2>
           <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <input
               type="text"
@@ -919,8 +920,8 @@ function App() {
           </div>
           {filteredPublicDecks.length > 0 ? filteredPublicDecks.map((deck) => (
             <div key={deck._id} style={{ border: '1px solid gray', padding: 10, marginBottom: '10px' }}>
-              <h4>{deck.name}</h4>
-              <p>{deck.author}</p>
+              <h4 style={{ color: '#333' }}>{deck.name}</h4>
+              <p style={{ color: '#333' }}>{deck.author}</p>
               <button onClick={() => selectDeck(deck, 'study')}>Study</button>
               <button onClick={async () => {
                 alert(`Added ${deck.name} to your decks.`);
@@ -941,11 +942,11 @@ function App() {
       
       {mode === 'home' && loggedIn && (
         <>
-          <h2>Decks</h2>
+          <h2 style={{ color: '#333' }}>Decks</h2>
           {decks.sort((a, b) => a.name.localeCompare(b.name)).map((deck) => (
             <div key={deck._id} style={{ border: '1px solid gray', padding: '10px', marginBottom: '10px' }}>
-              <h4>{deck.name}</h4>
-              <p>{deck.author}</p>
+              <h4 style={{ color: '#333' }}>{deck.name}</h4>
+              <p style={{ color: '#333' }}>{deck.author}</p>
           <button onClick={() => selectDeck(deck, 'edit')}>Edit</button>
               <button onClick={() => selectDeck(deck, 'study')}>Study</button>
               <button onClick={() => exportToCSV(deck)}>Export to CSV</button>
@@ -953,14 +954,37 @@ function App() {
           ))}
           <button onClick={createDeck}>Create New Deck</button>
           <div style={{ marginTop: '20px' }}>
-            <h3>Import CSV</h3>
-            <input
-              type="file"
-              accept=".csv"
-              onChange={handleCSVImport}
-              style={{ marginTop: '10px' }}
-            />
-            <p style={{ fontSize: '0.8em', color: '#666' }}>
+            <h3 style={{ color: '#333' }}>Import CSV</h3>
+            <div style={{ position: 'relative', display: 'inline-block' }}>
+              <input
+                type="file"
+                accept=".csv"
+                onChange={handleCSVImport}
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  top: 0,
+                  opacity: 0,
+                  cursor: 'pointer',
+                  width: '100%',
+                  height: '100%',
+                }}
+              />
+              <label
+                htmlFor="csv-upload"
+                style={{
+                  backgroundColor: '#667eea', 
+                  color: 'white', 
+                  padding: '8px 12px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  display: 'inline-block',
+                }}
+              >
+                Choose File
+              </label>
+            </div>
+            <p style={{ fontSize: '0.8em', color: '#333', marginTop: '10px' }}>
               CSV should have two columns: Front and Back
             </p>
           </div>
