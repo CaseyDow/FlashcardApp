@@ -509,7 +509,18 @@ function App() {
           {
             selectedDeck.cards.length == 0
               ? "Empty Deck"
-              : (studyFront ? selectedDeck.cards[studyIndex].front : selectedDeck.cards[studyIndex].back)
+              : (
+                <div>
+                  {studyFront ? selectedDeck.cards[studyIndex].front : selectedDeck.cards[studyIndex].back}
+                  <div style={{
+                    marginTop: '10px',
+                    fontSize: '14px',
+                    color: '#666'
+                  }}>
+                    {studyFront ? 'Front Side' : 'Back Side'}
+                  </div>
+                </div>
+              )
           }
          
         </div>
@@ -762,30 +773,47 @@ function App() {
         bottom: 0,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        padding: '20px',
-        overflow: 'auto'
-      }}>
-        <div style={{
-          background: 'rgba(255, 255, 255, 0.95)',
-          padding: '40px',
-          borderRadius: '15px',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-          width: '100%',
-          maxWidth: '800px',
-          textAlign: 'center'
-        }}>
-          <h1 style={{
-            color: '#333',
-            marginBottom: '30px',
-            fontSize: '2.5em',
-            fontWeight: '600'
-          }}>Editing Deck</h1>
-            <div>
-              <p>by <strong>{selectedDeck.author}</strong></p>
             </div>
+          );})()}
+          
+          {mode === 'home' && loggedIn && (
+            <>
+              <h2 style={{ color: '#333' }}>Decks</h2>
+              {decks.sort((a, b) => a.name.localeCompare(b.name)).map((deck) => (
+                <div key={deck._id} style={{ border: '1px solid gray', padding: '10px', marginBottom: '10px' }}>
+                  <h4 style={{ color: '#333' }}>{deck.name}</h4>
+                  <p style={{ color: '#333' }}>{deck.author}</p>
+              <button onClick={() => selectDeck(deck, 'edit')}>Edit</button>
+                  <button onClick={() => selectDeck(deck, 'study')}>Study</button>
+                  <button onClick={() => exportToCSV(deck)}>Export to CSV</button>
+                </div>
+              ))}
+              <button onClick={createDeck}>Create New Deck</button>
+              <div style={{ marginTop: '20px' }}>
+                <h3 style={{ color: '#333' }}>Import CSV</h3>
+                <div style={{ position: 'relative', display: 'inline-block' }}>
+                  <input
+                    type="file"
+                    accept=".csv"
+                    onChange={handleCSVImport}
+                    style={{
+                      position: 'absolute',
+                      left: 0,
+                      top: 0,
+                      opacity: 0,
+                      cursor: 'pointer',
+                      width: '100%',
+                      height: '100%',
+                    }}
+                  />
+                  <label
+                    htmlFor="csv-upload"
+                    style={{
+                      backgroundColor: '#667eea', 
+                      color: 'white', 
+                      padding: '8px 12px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
           <div style={{
             display: 'flex',
             flexDirection: 'column',
