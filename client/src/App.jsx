@@ -844,47 +844,19 @@ function App() {
         bottom: 0,
         display: 'flex',
         flexDirection: 'column',
-            </div>
-          );})()}
-          
-          {mode === 'home' && loggedIn && (
-            <>
-              <h2 style={{ color: '#333' }}>Decks</h2>
-              {decks.sort((a, b) => a.name.localeCompare(b.name)).map((deck) => (
-                <div key={deck._id} style={{ border: '1px solid gray', padding: '10px', marginBottom: '10px' }}>
-                  <h4 style={{ color: '#333' }}>{deck.name}</h4>
-                  <p style={{ color: '#333' }}>{deck.author}</p>
-              <button onClick={() => selectDeck(deck, 'edit')}>Edit</button>
-                  <button onClick={() => selectDeck(deck, 'study')}>Study</button>
-                  <button onClick={() => exportToCSV(deck)}>Export to CSV</button>
-                </div>
-              ))}
-              <button onClick={createDeck}>Create New Deck</button>
-              <div style={{ marginTop: '20px' }}>
-                <h3 style={{ color: '#333' }}>Import CSV</h3>
-                <div style={{ position: 'relative', display: 'inline-block' }}>
-                  <input
-                    type="file"
-                    accept=".csv"
-                    onChange={handleCSVImport}
-                    style={{
-                      position: 'absolute',
-                      left: 0,
-                      top: 0,
-                      opacity: 0,
-                      cursor: 'pointer',
-                      width: '100%',
-                      height: '100%',
-                    }}
-                  />
-                  <label
-                    htmlFor="csv-upload"
-                    style={{
-                      backgroundColor: '#667eea', 
-                      color: 'white', 
-                      padding: '8px 12px',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        padding: '20px'
+      }}>
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.95)',
+          padding: '40px',
+          borderRadius: '15px',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          width: '90%',
+          maxWidth: '800px'
+        }}>
           <div style={{
             display: 'flex',
             flexDirection: 'column',
@@ -946,12 +918,11 @@ function App() {
             </div>
           ))}
           <button onClick={addNewCard}>Add New Card</button>
-        </div>
-        <br/>
-        <div style={{flex: 1}}>
-          <button onClick={saveDeckChanges}>Save Changes</button>
-          {selectedDeck._id && <button onClick={deleteDeck} style={{ color: 'red' }}>Delete Deck</button>}
-          <button onClick={() => setMode('home')}>Back</button>
+          <div style={{flex: 1}}>
+            <button onClick={saveDeckChanges}>Save Changes</button>
+            {selectedDeck._id && <button onClick={deleteDeck} style={{ color: 'red' }}>Delete Deck</button>}
+            <button onClick={() => setMode('home')}>Back</button>
+          </div>
         </div>
       </div>
     );
@@ -966,133 +937,138 @@ function App() {
       alignItems: 'center',
       minHeight: '100vh'
     }}>
-    <div style={{
-      background: 'rgba(255, 255, 255, 0.95)',
-      padding: '40px',
-      borderRadius: '15px',
-      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-      width: '90%',
-      top: '10vh',
-      margin: '50px'
-    }}>
-      {loggedIn && (
-        <>
-          <button onClick={() => setMode('home')}>Home</button>
-          <button onClick={() => {
-            setMode('public');
-            fetchPublicDecks();
-          }}>Explore Public Decks</button>
-          <button onClick={deleteAccount}>Delete Account</button>
-          <button onClick={logout}>Logout</button>
-          <hr />
-        </>
-      )}
+      <div style={{
+        background: 'rgba(255, 255, 255, 0.95)',
+        padding: '40px',
+        borderRadius: '15px',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+        width: '90%',
+        top: '10vh',
+        margin: '50px'
+      }}>
+        {loggedIn && (
+          <>
+            <button onClick={() => setMode('home')}>Home</button>
+            <button onClick={() => {
+              setMode('public');
+              fetchPublicDecks();
+            }}>Explore Public Decks</button>
+            <button onClick={deleteAccount}>Delete Account</button>
+            <button onClick={logout}>Logout</button>
+            <hr />
+          </>
+        )}
 
-      {mode === 'public' && ( () => {
-        const filteredPublicDecks = publicDecks.filter(deck => {
-        const term = publicSearchTerm.toLowerCase();
-        if (searchByAuthor) {
-          // Ensure deck.author exists and is searchable (assuming author is a string or object with username)
-          const authorName = typeof deck.author === 'object' && deck.author !== null ? String(deck.author.username || '').toLowerCase() : String(deck.author || '').toLowerCase();
-          return authorName.includes(term);
-        } else {
-          return deck.name.toLowerCase().includes(term);
-        }
-      });
-        return (
-        <div style={{ marginTop: '20px' }}>
-          <h2 style={{ color: '#333' }}>Public Decks</h2>
-          <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <input
-              type="text"
-              placeholder={searchByAuthor ? "Search by author..." : "Search by deck name..."}
-              value={publicSearchTerm}
-              onChange={(e) => setPublicSearchTerm(e.target.value)}
-              style={{ padding: '10px', flexGrow: 1 }} // flexGrow to take available space
-            />
-            <label style={{ display: 'flex', alignItems: 'center' }}>
-              <input
-                type="checkbox"
-                checked={searchByAuthor}
-                onChange={(e) => setSearchByAuthor(e.target.checked)}
-                style={{ marginRight: '5px' }}
-              />
-              Search by Author
-            </label>
-          </div>
-          {filteredPublicDecks.length > 0 ? filteredPublicDecks.map((deck) => (
-            <div key={deck._id} style={{ border: '1px solid gray', padding: 10, marginBottom: '10px' }}>
-              <h4 style={{ color: '#333' }}>{deck.name}</h4>
-              <p style={{ color: '#333' }}>{deck.author}</p>
-              <button onClick={() => selectDeck(deck, 'study')}>Study</button>
-              <button onClick={async () => {
-                alert(`Added ${deck.name} to your decks.`);
-                const res = await fetch(`${URL}/decks`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  credentials: 'include',
-                  body: JSON.stringify({ name: deck.name, cards: deck.cards, isPublic: false }),
-                });
-                const result = await res.json();
-                fetchDecks();
-              }}>Copy to My Decks</button>
-            </div>
-          )) : <p>No Public Decks Available</p>}
-          {!loggedIn && <button onClick={() => setMode('home')}>Back to Login</button>}
-        </div>
-      );})()}
-      
-      {mode === 'home' && loggedIn && (
-        <>
-          <h2 style={{ color: '#333' }}>Decks</h2>
-          {decks.sort((a, b) => a.name.localeCompare(b.name)).map((deck) => (
-            <div key={deck._id} style={{ border: '1px solid gray', padding: '10px', marginBottom: '10px' }}>
-              <h4 style={{ color: '#333' }}>{deck.name}</h4>
-              <p style={{ color: '#333' }}>{deck.author}</p>
-          <button onClick={() => selectDeck(deck, 'edit')}>Edit</button>
-              <button onClick={() => selectDeck(deck, 'study')}>Study</button>
-              <button onClick={() => exportToCSV(deck)}>Export to CSV</button>
-            </div>
-          ))}
-          <button onClick={createDeck}>Create New Deck</button>
+        {mode === 'public' && (
           <div style={{ marginTop: '20px' }}>
-            <h3 style={{ color: '#333' }}>Import CSV</h3>
-            <div style={{ position: 'relative', display: 'inline-block' }}>
+            <h2 style={{ color: '#333' }}>Public Decks</h2>
+            <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
               <input
-                type="file"
-                accept=".csv"
-                onChange={handleCSVImport}
-                style={{
-                  position: 'absolute',
-                  left: 0,
-                  top: 0,
-                  opacity: 0,
-                  cursor: 'pointer',
-                  width: '100%',
-                  height: '100%',
-                }}
+                type="text"
+                placeholder={searchByAuthor ? "Search by author..." : "Search by deck name..."}
+                value={publicSearchTerm}
+                onChange={(e) => setPublicSearchTerm(e.target.value)}
+                style={{ padding: '10px', flexGrow: 1 }}
               />
-              <label
-                htmlFor="csv-upload"
-                style={{
-                  backgroundColor: '#667eea', 
-                  color: 'white', 
-                  padding: '8px 12px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  display: 'inline-block',
-                }}
-              >
-                Choose File
+              <label style={{ display: 'flex', alignItems: 'center' }}>
+                <input
+                  type="checkbox"
+                  checked={searchByAuthor}
+                  onChange={(e) => setSearchByAuthor(e.target.checked)}
+                  style={{ marginRight: '5px' }}
+                />
+                Search by Author
               </label>
             </div>
-            <p style={{ fontSize: '0.8em', color: '#333', marginTop: '10px' }}>
-              CSV should have two columns: Front and Back
-            </p>
+            {publicDecks.length > 0 ? (
+              publicDecks.filter(deck => {
+                const term = publicSearchTerm.toLowerCase();
+                if (searchByAuthor) {
+                  const authorName = typeof deck.author === 'object' && deck.author !== null 
+                    ? String(deck.author.username || '').toLowerCase() 
+                    : String(deck.author || '').toLowerCase();
+                  return authorName.includes(term);
+                } else {
+                  return deck.name.toLowerCase().includes(term);
+                }
+              }).map((deck) => (
+                <div key={deck._id} style={{ border: '1px solid gray', padding: 10, marginBottom: '10px' }}>
+                  <h4 style={{ color: '#333' }}>{deck.name}</h4>
+                  <p style={{ color: '#333' }}>{deck.author}</p>
+                  <button onClick={() => selectDeck(deck, 'study')}>Study</button>
+                  <button onClick={async () => {
+                    alert(`Added ${deck.name} to your decks.`);
+                    const res = await fetch(`${URL}/decks`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      credentials: 'include',
+                      body: JSON.stringify({ name: deck.name, cards: deck.cards, isPublic: false }),
+                    });
+                    const result = await res.json();
+                    fetchDecks();
+                  }}>Copy to My Decks</button>
+                </div>
+              ))
+            ) : (
+              <p>No Public Decks Available</p>
+            )}
+            {!loggedIn && (
+              <button onClick={() => setMode('home')}>Back to Login</button>
+            )}
           </div>
-        </>
-      )}
-    </div>
+        )}
+        
+        {mode === 'home' && loggedIn && (
+          <>
+            <h2 style={{ color: '#333' }}>Decks</h2>
+            {decks.sort((a, b) => a.name.localeCompare(b.name)).map((deck) => (
+              <div key={deck._id} style={{ border: '1px solid gray', padding: '10px', marginBottom: '10px' }}>
+                <h4 style={{ color: '#333' }}>{deck.name}</h4>
+                <p style={{ color: '#333' }}>{deck.author}</p>
+                <button onClick={() => selectDeck(deck, 'edit')}>Edit</button>
+                <button onClick={() => selectDeck(deck, 'study')}>Study</button>
+                <button onClick={() => exportToCSV(deck)}>Export to CSV</button>
+              </div>
+            ))}
+            <button onClick={createDeck}>Create New Deck</button>
+            <div style={{ marginTop: '20px' }}>
+              <h3 style={{ color: '#333' }}>Import CSV</h3>
+              <div style={{ position: 'relative', display: 'inline-block' }}>
+                <input
+                  type="file"
+                  accept=".csv"
+                  onChange={handleCSVImport}
+                  style={{
+                    position: 'absolute',
+                    left: 0,
+                    top: 0,
+                    opacity: 0,
+                    cursor: 'pointer',
+                    width: '100%',
+                    height: '100%',
+                  }}
+                />
+                <label
+                  htmlFor="csv-upload"
+                  style={{
+                    backgroundColor: '#667eea', 
+                    color: 'white', 
+                    padding: '8px 12px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    display: 'inline-block',
+                  }}
+                >
+                  Choose File
+                </label>
+              </div>
+              <p style={{ fontSize: '0.8em', color: '#333', marginTop: '10px' }}>
+                CSV should have two columns: Front and Back
+              </p>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
