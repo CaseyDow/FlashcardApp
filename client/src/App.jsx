@@ -151,6 +151,7 @@ function App() {
     setSelectedDeck(JSON.parse(JSON.stringify({...deck, author: username})));
     setStudyIndex(0);
     setStudyFront(true); // Reset to front when selecting a new deck
+    setKnownCards(new Set()); // Reset known cards when opening a deck
     setMode(newMode);
   }
 
@@ -482,145 +483,273 @@ function App() {
         justifyContent: 'center',
         minHeight: '100vh',
       }}>
-      <div style={{
-        background: 'rgba(255, 255, 255, 0.95)',
-        padding: '40px',
-        borderRadius: '15px',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-        width: '90%',
-        minHeight: '80vh',
-        top: '10vh',
-        margin: '50px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}>
-        <h2 style={{ color: '#333' }}>{selectedDeck.name}</h2>
-
         <div style={{
           background: 'rgba(255, 255, 255, 0.95)',
           padding: '40px',
           borderRadius: '15px',
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-          width: '100%',
-          maxWidth: '800px',
-          textAlign: 'center'
+          width: '90%',
+          minHeight: '80vh',
+          top: '10vh',
+          margin: '50px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
         }}>
-          {selectedDeck.cards.length == 0
-            ? "Empty Deck"
-            : (
-              <div>
-                <div style={{
-                  width: '100%',
-                  height: '5px',
-                  backgroundColor: '#eee',
-                  borderRadius: '2px',
-                  marginBottom: '10px'
-                }}>
+          <h2 style={{ color: '#333' }}>{selectedDeck.name}</h2>
+
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.95)',
+            padding: '40px',
+            borderRadius: '15px',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+            width: '100%',
+            maxWidth: '800px',
+            textAlign: 'center',
+            minHeight: '300px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            position: 'relative',
+            cursor: 'pointer',
+            transition: 'transform 0.6s',
+            transformStyle: 'preserve-3d',
+            transform: studyFront ? 'rotateY(0deg)' : 'rotateY(180deg)',
+          }}
+          onClick={() => setStudyFront(!studyFront)}>
+            <div style={{
+              position: 'absolute',
+              width: '100%',
+              height: '100%',
+              backfaceVisibility: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              padding: '20px',
+            }}>
+              {selectedDeck.cards.length == 0
+                ? "Empty Deck"
+                : (
+                  <div style={{ width: '100%' }}>
+                    <div style={{
+                      width: '100%',
+                      height: '5px',
+                      backgroundColor: '#eee',
+                      borderRadius: '2px',
+                      marginBottom: '10px'
+                    }}>
+                      <div style={{
+                        width: `${((studyIndex + 1) / selectedDeck.cards.length) * 100}%`,
+                        height: '100%',
+                        backgroundColor: '#667eea',
+                        borderRadius: '2px'
+                      }}></div>
+                    </div>
+                    <div style={{
+                      fontSize: '14px',
+                      color: '#666',
+                      marginBottom: '15px'
+                    }}>
+                      Progress: {((studyIndex + 1) / selectedDeck.cards.length * 100).toFixed(1)}%
+                    </div>
+                    <div style={{
+                      fontSize: '24px',
+                      marginBottom: '20px',
+                      wordBreak: 'break-word'
+                    }}>
+                      {selectedDeck.cards[studyIndex].front}
+                    </div>
+                    <div style={{
+                      fontSize: '14px',
+                      color: '#666',
+                      position: 'absolute',
+                      bottom: '20px',
+                      left: '50%',
+                      transform: 'translateX(-50%)'
+                    }}>
+                      Click to flip (Front)
+                    </div>
+                  </div>
+                )
+              }
+            </div>
+            <div style={{
+              position: 'absolute',
+              width: '100%',
+              height: '100%',
+              backfaceVisibility: 'hidden',
+              transform: 'rotateY(180deg)',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              padding: '20px',
+            }}>
+              {selectedDeck.cards.length > 0 && (
+                <div style={{ width: '100%' }}>
                   <div style={{
-                    width: `${((studyIndex + 1) / selectedDeck.cards.length) * 100}%`,
-                    height: '100%',
-                    backgroundColor: '#667eea',
-                    borderRadius: '2px'
-                  }}></div>
+                    fontSize: '24px',
+                    marginBottom: '20px',
+                    wordBreak: 'break-word'
+                  }}>
+                    {selectedDeck.cards[studyIndex].back}
+                  </div>
+                  <div style={{
+                    fontSize: '14px',
+                    color: '#666',
+                    position: 'absolute',
+                    bottom: '20px',
+                    left: '50%',
+                    transform: 'translateX(-50%)'
+                  }}>
+                    Click to flip (Back)
+                  </div>
                 </div>
-                <div style={{
-                  fontSize: '14px',
-                  color: '#666',
-                  marginBottom: '15px'
-                }}>
-                  Progress: {((studyIndex + 1) / selectedDeck.cards.length * 100).toFixed(1)}%
-                </div>
-                {studyFront ? selectedDeck.cards[studyIndex].front : selectedDeck.cards[studyIndex].back}
-                <div style={{
-                  marginTop: '15px',
-                  fontSize: '14px',
-                  color: '#666'
-                }}>
-                  Known Cards: {knownCards.size} / {selectedDeck.cards.length}
-                </div>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  marginTop: '15px'
-                }}>
-                  <input
-                    type="checkbox"
-                    checked={repeatMode}
-                    onChange={(e) => setRepeatMode(e.target.checked)}
-                    style={{
-                      width: '20px',
-                      height: '20px',
-                      accentColor: '#667eea'
-                    }}
-                  />
-                  <label style={{ color: '#666' }}>
-                    Repeat unknown cards
-                  </label>
-                </div>
-                <div style={{
-                  marginTop: '15px',
-                  fontSize: '14px',
-                  color: '#666'
-                }}>
-                  {repeatMode 
-                    ? `Reviewing ${selectedDeck.cards.length - knownCards.size} unknown cards`
-                    : `Total cards: ${selectedDeck.cards.length}`
-                  }
-                </div>
-              </div>
-            )
-          }
-        </div>
+              )}
+            </div>
+          </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', marginTop: '20px' }}>
-          <button
-            onClick={() => {
-              setKnownCards(prev => new Set([...prev, studyIndex]));
-              setStudyIndex(Math.min(studyIndex + 1, selectedDeck.cards.length - 1));
-              setStudyFront(true);
-            }}
-            style={{
-              backgroundColor: '#4CAF50',
-              color: 'white',
-              padding: '8px 16px',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '14px'
-            }}
-          >
-            Mark as Known
-          </button>
-          <button
-            onClick={() => {
-              setStudyIndex(Math.max(studyIndex - 1, 0));
-              setStudyFront(true);
-            }}
-            disabled={studyIndex == 0}
-          >
-            Previous Card
-            ←
-          </button>
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column',
+            alignItems: 'center', 
+            gap: '20px', 
+            marginTop: '30px',
+            width: '100%',
+            maxWidth: '800px'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+            }}>
+              <input
+                type="checkbox"
+                checked={repeatMode}
+                onChange={(e) => setRepeatMode(e.target.checked)}
+                style={{
+                  width: '20px',
+                  height: '20px',
+                  accentColor: '#667eea'
+                }}
+              />
+              <label style={{ color: '#666' }}>
+                Repeat unknown cards
+              </label>
+            </div>
 
-          <span style={{ color: '#333' }}>{studyIndex + 1} / {selectedDeck.cards.length}</span>
+            <div style={{
+              fontSize: '14px',
+              color: '#666'
+            }}>
+              {repeatMode 
+                ? `Reviewing ${selectedDeck.cards.length - knownCards.size} unknown cards`
+                : `Total cards: ${selectedDeck.cards.length}`
+              }
+            </div>
 
-          <button
-            onClick={() => {
-              setStudyIndex(Math.min(studyIndex + 1, selectedDeck.cards.length - 1));
-              setStudyFront(true);
-            }} disabled={studyIndex >= selectedDeck.cards.length - 1}>
-            →
-          </button>
-        </div>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              gap: '20px',
+              width: '100%'
+            }}>
+              <button
+                onClick={() => {
+                  setKnownCards(prev => new Set([...prev, studyIndex]));
+                  setStudyIndex(Math.min(studyIndex + 1, selectedDeck.cards.length - 1));
+                  setStudyFront(true);
+                }}
+                style={{
+                  backgroundColor: '#4CAF50',
+                  color: 'white',
+                  padding: '12px 24px',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                  flex: 1,
+                  maxWidth: '200px'
+                }}
+              >
+                Mark as Known
+              </button>
 
-        <div>
-          <button onClick={() => setMode('home')}>Home</button>
+              <button
+                onClick={() => {
+                  setStudyIndex(Math.max(studyIndex - 1, 0));
+                  setStudyFront(true);
+                }}
+                disabled={studyIndex == 0}
+                style={{
+                  backgroundColor: '#667eea',
+                  color: 'white',
+                  padding: '12px 24px',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: studyIndex == 0 ? 'not-allowed' : 'pointer',
+                  opacity: studyIndex == 0 ? 0.5 : 1,
+                  fontSize: '16px',
+                  flex: 1,
+                  maxWidth: '200px'
+                }}
+              >
+                Previous Card
+              </button>
+
+              <button
+                onClick={() => {
+                  setStudyIndex(Math.min(studyIndex + 1, selectedDeck.cards.length - 1));
+                  setStudyFront(true);
+                }}
+                disabled={studyIndex >= selectedDeck.cards.length - 1}
+                style={{
+                  backgroundColor: '#667eea',
+                  color: 'white',
+                  padding: '12px 24px',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: studyIndex >= selectedDeck.cards.length - 1 ? 'not-allowed' : 'pointer',
+                  opacity: studyIndex >= selectedDeck.cards.length - 1 ? 0.5 : 1,
+                  fontSize: '16px',
+                  flex: 1,
+                  maxWidth: '200px'
+                }}
+              >
+                Next Card
+              </button>
+            </div>
+
+            <div style={{
+              fontSize: '14px',
+              color: '#666',
+              marginTop: '10px'
+            }}>
+              Card {studyIndex + 1} of {selectedDeck.cards.length}
+            </div>
+
+            <button 
+              onClick={() => setMode('home')}
+              style={{
+                backgroundColor: '#667eea',
+                color: 'white',
+                padding: '12px 24px',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '16px',
+                marginTop: '20px'
+              }}
+            >
+              Back to Home
+            </button>
+          </div>
         </div>
       </div>
-    </div>
     );
   }
 
@@ -834,7 +963,7 @@ function App() {
     );
   }
 
-  if (mode == 'edit' && selectedDeck) {
+  if (mode === 'edit' && selectedDeck) {
     return (
       <div style={{
         position: 'fixed',
@@ -847,21 +976,30 @@ function App() {
         alignItems: 'center',
         justifyContent: 'center',
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        padding: '20px'
+        padding: '20px',
+        overflow: 'auto'
       }}>
         <div style={{
           background: 'rgba(255, 255, 255, 0.95)',
           padding: '40px',
           borderRadius: '15px',
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-          width: '90%',
-          maxWidth: '800px'
+          width: '100%',
+          maxWidth: '800px',
+          textAlign: 'center'
         }}>
+          <h1 style={{
+            color: '#333',
+            marginBottom: '30px',
+            fontSize: '2.5em',
+            fontWeight: '600'
+          }}>Editing Deck</h1>
+          <p>by <strong>{selectedDeck.author}</strong></p>
           <div style={{
             display: 'flex',
             flexDirection: 'column',
             gap: '20px',
-            width: '100%'
+            marginTop: '20px'
           }}>
             <input
               value={selectedDeck.name}
@@ -875,11 +1013,11 @@ function App() {
                 transition: 'border-color 0.3s ease',
                 outline: 'none',
                 width: '100%',
+                marginBottom: '20px'
               }}
               onFocus={(e) => e.target.style.borderColor = '#667eea'}
               onBlur={(e) => e.target.style.borderColor = '#ddd'}
             />
-
             <div style={{
               display: 'flex',
               alignItems: 'center',
@@ -900,28 +1038,56 @@ function App() {
                 fontSize: '16px'
               }}>Public</span>
             </div>
-          </div>
-          {selectedDeck.cards.map((card, idx) => (
-            <div key={idx} style={{ marginBottom: 10 }}>
-              <input
-                value={card.front}
-                onChange={(e) => handleCardChange(idx, 'front', e.target.value)}
-                placeholder="Front"
-                style={{margin: 5}}
-              />
-              <input
-                value={card.back}
-                onChange={(e) => handleCardChange(idx, 'back', e.target.value)}
-                placeholder="Back"
-              />
-              <button onClick={() => deleteCard(idx)}>Delete Card</button>
+            {selectedDeck.cards.map((card, idx) => (
+              <div key={idx} style={{ padding: '15px', border: '1px solid #ddd', borderRadius: '8px', marginBottom: '10px' }}>
+                <input
+                  type="text"
+                  value={card.front}
+                  placeholder="Front"
+                  onChange={(e) => handleCardChange(idx, 'front', e.target.value)}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', border: '1px solid #ddd', borderRadius: '4px' }}
+                />
+                <input
+                  type="text"
+                  value={card.back}
+                  placeholder="Back"
+                  onChange={(e) => handleCardChange(idx, 'back', e.target.value)}
+                  style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+                />
+                <button
+                  onClick={() => deleteCard(idx)}
+                  style={{ marginTop: '10px', backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}
+                >
+                  Delete
+                </button>
+              </div>
+            ))}
+            <button
+              onClick={addNewCard}
+              style={{ backgroundColor: '#667eea', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '4px', cursor: 'pointer' }}
+            >
+              Add New Card
+            </button>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+              <button
+                onClick={saveDeckChanges}
+                style={{ backgroundColor: '#28a745', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '4px', cursor: 'pointer' }}
+              >
+                Save Changes
+              </button>
+              <button
+                onClick={deleteDeck}
+                style={{ backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '4px', cursor: 'pointer' }}
+              >
+                Delete Deck
+              </button>
+              <button
+                onClick={() => setMode('home')}
+                style={{ backgroundColor: '#667eea', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '4px', cursor: 'pointer' }}
+              >
+                Back
+              </button>
             </div>
-          ))}
-          <button onClick={addNewCard}>Add New Card</button>
-          <div style={{flex: 1}}>
-            <button onClick={saveDeckChanges}>Save Changes</button>
-            {selectedDeck._id && <button onClick={deleteDeck} style={{ color: 'red' }}>Delete Deck</button>}
-            <button onClick={() => setMode('home')}>Back</button>
           </div>
         </div>
       </div>
@@ -1035,6 +1201,7 @@ function App() {
               <h3 style={{ color: '#333' }}>Import CSV</h3>
               <div style={{ position: 'relative', display: 'inline-block' }}>
                 <input
+                  id="csv-upload"
                   type="file"
                   accept=".csv"
                   onChange={handleCSVImport}
@@ -1055,11 +1222,10 @@ function App() {
                     color: 'white', 
                     padding: '8px 12px',
                     borderRadius: '4px',
-                    cursor: 'pointer',
-                    display: 'inline-block',
+                    cursor: 'pointer'
                   }}
                 >
-                  Choose File
+                  Import CSV
                 </label>
               </div>
               <p style={{ fontSize: '0.8em', color: '#333', marginTop: '10px' }}>
