@@ -965,7 +965,7 @@ function App() {
     );
   }
 
-  if (mode === 'edit' && selectedDeck) {
+if (mode === 'edit' && selectedDeck) {
     return (
       <div style={{
         position: 'fixed',
@@ -979,7 +979,6 @@ function App() {
         justifyContent: 'center',
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         padding: '20px',
-        overflow: 'auto'
       }}>
         <div style={{
           background: 'rgba(255, 255, 255, 0.95)',
@@ -988,21 +987,21 @@ function App() {
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
           width: '100%',
           maxWidth: '800px',
-          textAlign: 'center'
+          textAlign: 'center',
+          display: 'flex',
+          flexDirection: 'column',
+          maxHeight: '90vh',
         }}>
-          <h1 style={{
-            color: '#333',
-            marginBottom: '30px',
-            fontSize: '2.5em',
-            fontWeight: '600'
-          }}>Editing Deck</h1>
-          <p>by <strong>{selectedDeck.author}</strong></p>
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '20px',
-            marginTop: '20px'
-          }}>
+          <div style={{ paddingBottom: '20px' }}>
+            <h1 style={{
+              color: '#333',
+              marginBottom: '10px',
+              fontSize: '2.5em',
+              fontWeight: '600'
+            }}>Editing Deck</h1>
+            <p style={{ marginBottom: '15px', color: '#333' }}>
+                by <strong>{selectedDeck.author}</strong>
+            </p>
             <input
               value={selectedDeck.name}
               onChange={(e) => setSelectedDeck({ ...selectedDeck, name: e.target.value })}
@@ -1014,8 +1013,9 @@ function App() {
                 fontSize: '16px',
                 transition: 'border-color 0.3s ease',
                 outline: 'none',
-                width: '100%',
-                marginBottom: '20px'
+                width: 'calc(100% - 32px)',
+                boxSizing: 'border-box',
+                marginBottom: '15px'
               }}
               onFocus={(e) => e.target.style.borderColor = '#667eea'}
               onBlur={(e) => e.target.style.borderColor = '#ddd'}
@@ -1023,38 +1023,56 @@ function App() {
             <div style={{
               display: 'flex',
               alignItems: 'center',
+              justifyContent: 'center',
               gap: '10px',
               marginBottom: '20px'
             }}>
               <input
                 type="checkbox"
+                id="isPublicCheckbox"
                 checked={selectedDeck.isPublic}
                 onChange={(e) => setSelectedDeck({ ...selectedDeck, isPublic: e.target.checked })}
                 style={{
                   width: '20px',
-                  height: '20px'
+                  height: '20px',
+                  accentColor: '#667eea'
                 }}
               />
-              <span style={{
+              <label htmlFor="isPublicCheckbox" style={{
                 color: '#333',
-                fontSize: '16px'
-              }}>Public</span>
+                fontSize: '16px',
+                cursor: 'pointer'
+              }}>Public</label>
             </div>
+          </div>
+
+          <div style={{
+            flexGrow: 1, 
+            overflowY: 'auto',
+            marginBottom: '20px',
+            padding: '0 10px'
+          }}>
             {selectedDeck.cards.map((card, idx) => (
-              <div key={idx} style={{ padding: '15px', border: '1px solid #ddd', borderRadius: '8px', marginBottom: '10px' }}>
+              <div key={idx} style={{
+                padding: '15px',
+                border: '1px solid #ddd',
+                borderRadius: '8px',
+                marginBottom: '10px',
+                background: 'white'
+              }}>
                 <input
                   type="text"
                   value={card.front}
                   placeholder="Front"
                   onChange={(e) => handleCardChange(idx, 'front', e.target.value)}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', border: '1px solid #ddd', borderRadius: '4px' }}
+                  style={{ width: '100%', boxSizing: 'border-box', padding: '8px', marginBottom: '10px', border: '1px solid #ddd', borderRadius: '4px' }}
                 />
                 <input
                   type="text"
                   value={card.back}
                   placeholder="Back"
                   onChange={(e) => handleCardChange(idx, 'back', e.target.value)}
-                  style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+                  style={{ width: '100%', boxSizing: 'border-box', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
                 />
                 <button
                   onClick={() => deleteCard(idx)}
@@ -1064,13 +1082,16 @@ function App() {
                 </button>
               </div>
             ))}
+          </div>
+
+          <div style={{ paddingTop: '10px' }}>
             <button
               onClick={addNewCard}
-              style={{ backgroundColor: '#667eea', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '4px', cursor: 'pointer' }}
+              style={{ backgroundColor: '#667eea', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '4px', cursor: 'pointer', marginBottom: '20px' }}
             >
               Add New Card
             </button>
-            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
               <button
                 onClick={saveDeckChanges}
                 style={{ backgroundColor: '#28a745', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '4px', cursor: 'pointer' }}
