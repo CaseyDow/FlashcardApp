@@ -26,6 +26,7 @@ function App() {
   const [studyIndex, setStudyIndex] = useState(0);
   const [studyFront, setStudyFront] = useState(true);
   const [knownCards, setKnownCards] = useState(new Set());
+  const [repeatMode, setRepeatMode] = useState(false);
 
   const [publicDecks, setPublicDecks] = useState([]);
 
@@ -533,11 +534,41 @@ function App() {
                 </div>
                 {studyFront ? selectedDeck.cards[studyIndex].front : selectedDeck.cards[studyIndex].back}
                 <div style={{
-                  marginTop: '10px',
+                  marginTop: '15px',
                   fontSize: '14px',
                   color: '#666'
                 }}>
-                  {studyFront ? 'Front Side' : 'Back Side'}
+                  Known Cards: {knownCards.size} / {selectedDeck.cards.length}
+                </div>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  marginTop: '15px'
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={repeatMode}
+                    onChange={(e) => setRepeatMode(e.target.checked)}
+                    style={{
+                      width: '20px',
+                      height: '20px',
+                      accentColor: '#667eea'
+                    }}
+                  />
+                  <label style={{ color: '#666' }}>
+                    Repeat unknown cards
+                  </label>
+                </div>
+                <div style={{
+                  marginTop: '15px',
+                  fontSize: '14px',
+                  color: '#666'
+                }}>
+                  {repeatMode 
+                    ? `Reviewing ${selectedDeck.cards.length - knownCards.size} unknown cards`
+                    : `Total cards: ${selectedDeck.cards.length}`
+                  }
                 </div>
               </div>
             )
