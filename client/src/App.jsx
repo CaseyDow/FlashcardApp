@@ -25,6 +25,7 @@ function App() {
 
   const [studyIndex, setStudyIndex] = useState(0);
   const [studyFront, setStudyFront] = useState(true);
+  const [knownCards, setKnownCards] = useState(new Set());
 
   const [publicDecks, setPublicDecks] = useState([]);
 
@@ -496,41 +497,80 @@ function App() {
       }}>
         <h2 style={{ color: '#333' }}>{selectedDeck.name}</h2>
 
-        <div
-          style={{
-            padding: '50px',
-            width: '80%',
-            minHeight: '40vh',
-            border: 'solid 1px black',
-            whiteSpace: 'pre-wrap',
-            overflowWrap: 'break-word',
-            color: '#333'
-          }} onClick={() => setStudyFront(!studyFront)}>
-          {
-            selectedDeck.cards.length == 0
-              ? "Empty Deck"
-              : (
-                <div>
-                  {studyFront ? selectedDeck.cards[studyIndex].front : selectedDeck.cards[studyIndex].back}
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.95)',
+          padding: '40px',
+          borderRadius: '15px',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          width: '100%',
+          maxWidth: '800px',
+          textAlign: 'center'
+        }}>
+          {selectedDeck.cards.length == 0
+            ? "Empty Deck"
+            : (
+              <div>
+                <div style={{
+                  width: '100%',
+                  height: '5px',
+                  backgroundColor: '#eee',
+                  borderRadius: '2px',
+                  marginBottom: '10px'
+                }}>
                   <div style={{
-                    marginTop: '10px',
-                    fontSize: '14px',
-                    color: '#666'
-                  }}>
-                    {studyFront ? 'Front Side' : 'Back Side'}
-                  </div>
+                    width: `${((studyIndex + 1) / selectedDeck.cards.length) * 100}%`,
+                    height: '100%',
+                    backgroundColor: '#667eea',
+                    borderRadius: '2px'
+                  }}></div>
                 </div>
-              )
+                <div style={{
+                  fontSize: '14px',
+                  color: '#666',
+                  marginBottom: '15px'
+                }}>
+                  Progress: {((studyIndex + 1) / selectedDeck.cards.length * 100).toFixed(1)}%
+                </div>
+                {studyFront ? selectedDeck.cards[studyIndex].front : selectedDeck.cards[studyIndex].back}
+                <div style={{
+                  marginTop: '10px',
+                  fontSize: '14px',
+                  color: '#666'
+                }}>
+                  {studyFront ? 'Front Side' : 'Back Side'}
+                </div>
+              </div>
+            )
           }
-         
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', marginTop: '20px' }}>
           <button
             onClick={() => {
+              setKnownCards(prev => new Set([...prev, studyIndex]));
+              setStudyIndex(Math.min(studyIndex + 1, selectedDeck.cards.length - 1));
+              setStudyFront(true);
+            }}
+            style={{
+              backgroundColor: '#4CAF50',
+              color: 'white',
+              padding: '8px 16px',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            Mark as Known
+          </button>
+          <button
+            onClick={() => {
               setStudyIndex(Math.max(studyIndex - 1, 0));
               setStudyFront(true);
-            }} disabled={studyIndex == 0}>
+            }}
+            disabled={studyIndex == 0}
+          >
+            Previous Card
             ←
           </button>
 
