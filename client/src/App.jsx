@@ -500,6 +500,37 @@ function App() {
           <h2 style={{ color: '#333' }}>{selectedDeck.name}</h2>
 
           <div style={{
+            width: '100%',
+            maxWidth: '800px',
+            marginBottom: '30px'
+          }}>
+            <div style={{
+              width: '100%',
+              height: '5px',
+              backgroundColor: '#eee',
+              borderRadius: '2px',
+              marginBottom: '10px'
+            }}>
+              <div style={{
+                width: `${((studyIndex + 1) / selectedDeck.cards.length) * 100}%`,
+                height: '100%',
+                backgroundColor: '#667eea',
+                borderRadius: '2px'
+              }}></div>
+            </div>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              fontSize: '14px',
+              color: '#666'
+            }}>
+              <span>Progress: {((studyIndex + 1) / selectedDeck.cards.length * 100).toFixed(1)}%</span>
+              <span>Card {studyIndex + 1} of {selectedDeck.cards.length}</span>
+            </div>
+          </div>
+
+          <div style={{
             background: 'rgba(255, 255, 255, 0.95)',
             padding: '40px',
             borderRadius: '15px',
@@ -534,27 +565,6 @@ function App() {
                 ? "Empty Deck"
                 : (
                   <div style={{ width: '100%' }}>
-                    <div style={{
-                      width: '100%',
-                      height: '5px',
-                      backgroundColor: '#eee',
-                      borderRadius: '2px',
-                      marginBottom: '10px'
-                    }}>
-                      <div style={{
-                        width: `${((studyIndex + 1) / selectedDeck.cards.length) * 100}%`,
-                        height: '100%',
-                        backgroundColor: '#667eea',
-                        borderRadius: '2px'
-                      }}></div>
-                    </div>
-                    <div style={{
-                      fontSize: '14px',
-                      color: '#666',
-                      marginBottom: '15px'
-                    }}>
-                      Progress: {((studyIndex + 1) / selectedDeck.cards.length * 100).toFixed(1)}%
-                    </div>
                     <div style={{
                       fontSize: '24px',
                       marginBottom: '20px',
@@ -722,14 +732,6 @@ function App() {
               >
                 Next Card
               </button>
-            </div>
-
-            <div style={{
-              fontSize: '14px',
-              color: '#666',
-              marginTop: '10px'
-            }}>
-              Card {studyIndex + 1} of {selectedDeck.cards.length}
             </div>
 
             <button 
