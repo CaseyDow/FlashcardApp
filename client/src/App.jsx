@@ -564,7 +564,8 @@ function App() {
                     <div style={{
                       fontSize: '24px',
                       marginBottom: '20px',
-                      wordBreak: 'break-word'
+                      wordBreak: 'break-word',
+                      color: '#333'
                     }}>
                       {selectedDeck.cards[studyIndex].front}
                     </div>
@@ -599,7 +600,8 @@ function App() {
                   <div style={{
                     fontSize: '24px',
                     marginBottom: '20px',
-                    wordBreak: 'break-word'
+                    wordBreak: 'break-word',
+                    color: '#333'
                   }}>
                     {selectedDeck.cards[studyIndex].back}
                   </div>
