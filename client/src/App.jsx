@@ -25,9 +25,6 @@ function App() {
 
   const [studyIndex, setStudyIndex] = useState(0);
   const [studyFront, setStudyFront] = useState(true);
-  const [knownCards, setKnownCards] = useState(new Set());
-  const [repeatMode, setRepeatMode] = useState(false);
-
   const [publicDecks, setPublicDecks] = useState([]);
 
   // for search
@@ -151,7 +148,6 @@ function App() {
     setSelectedDeck(JSON.parse(JSON.stringify({...deck, author: username})));
     setStudyIndex(0);
     setStudyFront(true); // Reset to front when selecting a new deck
-    setKnownCards(new Set()); // Reset known cards when opening a deck
     setMode(newMode);
   }
 
@@ -632,33 +628,10 @@ function App() {
             maxWidth: '800px'
           }}>
             <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-            }}>
-              <input
-                type="checkbox"
-                checked={repeatMode}
-                onChange={(e) => setRepeatMode(e.target.checked)}
-                style={{
-                  width: '20px',
-                  height: '20px',
-                  accentColor: '#667eea'
-                }}
-              />
-              <label style={{ color: '#666' }}>
-                Repeat unknown cards
-              </label>
-            </div>
-
-            <div style={{
               fontSize: '14px',
               color: '#666'
             }}>
-              {repeatMode 
-                ? `Reviewing ${selectedDeck.cards.length - knownCards.size} unknown cards`
-                : `Total cards: ${selectedDeck.cards.length}`
-              }
+              Total cards: {selectedDeck.cards.length}
             </div>
 
             <div style={{ 
@@ -668,27 +641,6 @@ function App() {
               gap: '20px',
               width: '100%'
             }}>
-              <button
-                onClick={() => {
-                  setKnownCards(prev => new Set([...prev, studyIndex]));
-                  setStudyIndex(Math.min(studyIndex + 1, selectedDeck.cards.length - 1));
-                  setStudyFront(true);
-                }}
-                style={{
-                  backgroundColor: '#4CAF50',
-                  color: 'white',
-                  padding: '12px 24px',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontSize: '16px',
-                  flex: 1,
-                  maxWidth: '200px'
-                }}
-              >
-                Mark as Known
-              </button>
-
               <button
                 onClick={() => {
                   setStudyIndex(Math.max(studyIndex - 1, 0));
